@@ -39,6 +39,7 @@ function getStoredSavedPrompts(): LocalSavedPrompt[] {
 export default function DashboardPage() {
   const { toast } = useToast();
 
+  const [sidebarWidth, setSidebarWidth] = useState(272);
   const [inputValue, setInputValue] = useState("");
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [messages, setMessages] = useState<LocalMessage[]>([]);
@@ -291,7 +292,7 @@ export default function DashboardPage() {
   const inputBox = (testIdSuffix: string, disabled = false) => (
     <div
       className="flex items-end gap-2 rounded-2xl px-4 py-3"
-      style={{ backgroundColor: "#f4f4f5", border: "1px solid #e4e4e7" }}
+      style={{ backgroundColor: "#e8eeff", border: "1px solid #d0d8f8" }}
     >
       <textarea
         ref={inputRef}
@@ -302,7 +303,7 @@ export default function DashboardPage() {
         rows={1}
         disabled={disabled}
         data-testid={`input-prompt${testIdSuffix}`}
-        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-zinc-400 disabled:opacity-50"
+        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-indigo-300 disabled:opacity-50"
         style={{ color: "#18181b", minHeight: "24px", maxHeight: "120px" }}
         onInput={e => {
           const el = e.target as HTMLTextAreaElement;
@@ -314,7 +315,7 @@ export default function DashboardPage() {
         onClick={toggleVoice}
         data-testid={`button-mic${testIdSuffix}`}
         className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-        style={{ color: isListening ? "#6366f1" : "#71717a" }}
+        style={{ color: isListening ? "#6366f1" : "#a5b4fc" }}
       >
         {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </button>
@@ -323,7 +324,7 @@ export default function DashboardPage() {
         disabled={!inputValue.trim() || isGenerating}
         data-testid={`button-send${testIdSuffix}`}
         className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-        style={{ backgroundColor: inputValue.trim() ? "#18181b" : "#e4e4e7", color: "#ffffff" }}
+        style={{ backgroundColor: inputValue.trim() ? "#6366f1" : "#c7d2fe", color: "#ffffff" }}
       >
         {isGenerating && testIdSuffix === "-chat" ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -334,8 +335,17 @@ export default function DashboardPage() {
     </div>
   );
 
+  const platformLabel = (compact = false) => (
+    <p
+      className={`text-center ${compact ? "mt-2 text-[11px]" : "mt-3 text-xs"}`}
+      style={{ color: "#818cf8" }}
+    >
+      Choose your platform — or just mention it in your description
+    </p>
+  );
+
   const toolPills = (testPrefix: string, compact = false) => (
-    <div className={`flex flex-wrap gap-2 ${compact ? "mt-3" : "mt-4"} justify-center`}>
+    <div className={`flex flex-wrap gap-2 ${compact ? "mt-2" : "mt-3"} justify-center`}>
       {TOOL_PILLS.map(tool => (
         <button
           key={tool}
@@ -344,9 +354,9 @@ export default function DashboardPage() {
           className="rounded-full text-xs font-medium transition-all"
           style={{
             padding: compact ? "4px 10px" : "6px 12px",
-            backgroundColor: selectedTool === tool ? "#eef2ff" : "#f4f4f5",
-            color: selectedTool === tool ? "#6366f1" : "#71717a",
-            border: `1px solid ${selectedTool === tool ? "#c7d2fe" : "#e4e4e7"}`,
+            backgroundColor: selectedTool === tool ? "#6366f1" : "#dde3f8",
+            color: selectedTool === tool ? "#ffffff" : "#4f54a8",
+            border: `1px solid ${selectedTool === tool ? "#6366f1" : "#c7d2fe"}`,
           }}
         >
           {tool}
@@ -356,8 +366,13 @@ export default function DashboardPage() {
   );
 
   return (
-    <SidebarProvider style={{ "--sidebar-width": "17rem", "--sidebar-width-icon": "0rem" } as React.CSSProperties}>
-      <div className="flex h-screen w-full" style={{ backgroundColor: "#ffffff" }}>
+    <SidebarProvider
+      style={{
+        "--sidebar-width": `${sidebarWidth}px`,
+        "--sidebar-width-icon": "3rem",
+      } as React.CSSProperties}
+    >
+      <div className="flex h-screen w-full" style={{ backgroundColor: "#f0f4ff" }}>
         <AppSidebar
           conversations={conversations}
           savedPrompts={savedPrompts}
@@ -367,18 +382,20 @@ export default function DashboardPage() {
           activeConversationId={currentConvId}
           onDeleteConversation={deleteConversation}
           onDeleteSavedPrompt={deleteSavedPrompt}
+          sidebarWidth={sidebarWidth}
+          onResize={setSidebarWidth}
         />
 
         <div className="flex flex-col flex-1 min-w-0">
           <header
             className="flex items-center gap-2 px-4 h-12 shrink-0"
-            style={{ borderBottom: "1px solid #e4e4e7", backgroundColor: "#ffffff" }}
+            style={{ borderBottom: "1px solid #d0d8f8", backgroundColor: "#f0f4ff" }}
           >
-            <SidebarTrigger className="text-zinc-500" />
+            <SidebarTrigger className="text-indigo-400" />
             {detectedTool && hasMessages && (
               <span
                 className="text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#eef2ff", color: "#6366f1" }}
+                style={{ backgroundColor: "#e0e7ff", color: "#6366f1" }}
                 data-testid="badge-detected-tool"
               >
                 {detectedTool}
@@ -394,7 +411,7 @@ export default function DashboardPage() {
                   style={{ color: "#18181b" }}
                   data-testid="text-welcome-heading"
                 >
-                  What do you want to prompt — and which AI are you using?
+                  Tell me — what you want in your prompt, and for what app?
                 </h2>
 
                 <button
@@ -402,8 +419,8 @@ export default function DashboardPage() {
                   data-testid="button-mic-center"
                   className="w-20 h-20 rounded-full flex items-center justify-center mb-10 transition-all duration-300"
                   style={{
-                    backgroundColor: isListening ? "#6366f1" : "#f4f4f5",
-                    border: `2px solid ${isListening ? "#6366f1" : "#e4e4e7"}`,
+                    backgroundColor: isListening ? "#6366f1" : "#e0e7ff",
+                    border: `2px solid ${isListening ? "#6366f1" : "#c7d2fe"}`,
                   }}
                 >
                   {isListening ? (
@@ -415,6 +432,7 @@ export default function DashboardPage() {
 
                 <div className="w-full max-w-2xl">
                   {inputBox("")}
+                  {platformLabel()}
                   {toolPills("welcome")}
                 </div>
               </div>
@@ -427,8 +445,8 @@ export default function DashboardPage() {
                         <div
                           className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                           style={{
-                            backgroundColor: msg.role === "user" ? "#f4f4f5" : "#eef2ff",
-                            color: msg.role === "user" ? "#71717a" : "#6366f1",
+                            backgroundColor: msg.role === "user" ? "#e0e7ff" : "#c7d2fe",
+                            color: "#6366f1",
                           }}
                         >
                           {msg.role === "user" ? (
@@ -438,7 +456,7 @@ export default function DashboardPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium mb-1.5" style={{ color: "#71717a" }}>
+                          <p className="text-xs font-medium mb-1.5" style={{ color: "#818cf8" }}>
                             {msg.role === "user" ? "You" : "Prompt Smith"}
                           </p>
                           <div
@@ -461,7 +479,7 @@ export default function DashboardPage() {
                                 onClick={() => copyToClipboard(msg.content)}
                                 data-testid={`button-copy-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
-                                style={{ color: "#71717a" }}
+                                style={{ color: "#818cf8" }}
                               >
                                 <Copy className="w-3 h-3" />
                                 Copy
@@ -472,7 +490,7 @@ export default function DashboardPage() {
                                 onClick={() => handleSave(msg)}
                                 data-testid={`button-save-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
-                                style={{ color: "#71717a" }}
+                                style={{ color: "#818cf8" }}
                               >
                                 <Bookmark className="w-3 h-3" />
                                 Save
@@ -486,9 +504,10 @@ export default function DashboardPage() {
                   </div>
                 </ScrollArea>
 
-                <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid #e4e4e7" }}>
+                <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid #d0d8f8" }}>
                   <div className="max-w-2xl mx-auto">
                     {inputBox("-chat", isGenerating)}
+                    {platformLabel(true)}
                     {toolPills("chat", true)}
                   </div>
                 </div>
