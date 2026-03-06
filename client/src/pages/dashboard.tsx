@@ -471,8 +471,7 @@ export default function DashboardPage() {
                   style={{ color: "#18181b" }}
                   data-testid="text-welcome-heading"
                 >
-                  Tell me what you want.<br />
-                  <span className="font-extralight" style={{ fontSize: "0.9em" }}>I'll create the perfect prompt for any AI tool</span>
+                  I'll create the perfect prompt for any AI tool
                 </h2>
 
                 <button
