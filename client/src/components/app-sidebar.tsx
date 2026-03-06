@@ -1,17 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -76,10 +65,7 @@ export function AppSidebar({
     setSettingsOpen(false);
   };
 
-  const profileName = user
-    ? (displayName || user.email.split("@")[0])
-    : null;
-
+  const profileName = user ? (displayName || user.email.split("@")[0]) : null;
   const avatarLetter = profileName?.charAt(0).toUpperCase() ?? "";
 
   const startResize = (e: React.MouseEvent) => {
@@ -99,11 +85,13 @@ export function AppSidebar({
 
   return (
     <>
-      <Sidebar
-        className="relative"
-        style={{ backgroundColor: "#e4ebff", borderRight: "1px solid #c7d2fe" }}
+      {/* Plain div — no shadcn Sidebar so it doesn't inject spacers into the flex layout */}
+      <div
+        className="flex flex-col h-full relative"
+        style={{ backgroundColor: "#e4ebff", borderRight: "1px solid #c7d2fe", width: "100%" }}
       >
-        <SidebarHeader className="px-4 pt-5 pb-3" style={{ backgroundColor: "#e4ebff" }}>
+        {/* Header */}
+        <div className="px-4 pt-5 pb-3 flex-shrink-0">
           <h1
             className="text-sm font-semibold tracking-wide"
             style={{ color: "#18181b" }}
@@ -111,9 +99,10 @@ export function AppSidebar({
           >
             Prompt Smith
           </h1>
-        </SidebarHeader>
+        </div>
 
-        <SidebarContent className="px-2" style={{ backgroundColor: "#e4ebff" }}>
+        {/* Content */}
+        <div className="flex-1 overflow-hidden px-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList
               className="w-full grid grid-cols-2 h-8 rounded-lg border-0"
@@ -139,103 +128,91 @@ export function AppSidebar({
 
             <TabsContent value="saved" className="mt-3">
               <ScrollArea className="h-[calc(100vh-180px)]">
-                <SidebarGroup>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {savedPrompts.length === 0 ? (
-                        <div className="px-3 py-8 text-center">
-                          <Bookmark className="w-5 h-5 mx-auto mb-2" style={{ color: "#c7d2fe" }} />
-                          <p className="text-xs" style={{ color: "#a5b4fc" }}>No saved prompts yet</p>
+                <div className="space-y-0.5">
+                  {savedPrompts.length === 0 ? (
+                    <div className="px-3 py-8 text-center">
+                      <Bookmark className="w-5 h-5 mx-auto mb-2" style={{ color: "#c7d2fe" }} />
+                      <p className="text-xs" style={{ color: "#a5b4fc" }}>No saved prompts yet</p>
+                    </div>
+                  ) : (
+                    savedPrompts.map(prompt => (
+                      <button
+                        key={prompt.id}
+                        onClick={() => onSelectSavedPrompt(prompt)}
+                        data-testid={`saved-prompt-${prompt.id}`}
+                        className="group w-full text-left py-2.5 px-3 rounded-lg hover:bg-indigo-100 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium truncate" style={{ color: "#18181b" }}>
+                              {prompt.name}
+                            </p>
+                            <p className="text-[10px] truncate mt-0.5" style={{ color: "#6366f1" }}>
+                              {prompt.targetTool}
+                            </p>
+                          </div>
+                          <span
+                            onClick={e => { e.stopPropagation(); onDeleteSavedPrompt(prompt.id); }}
+                            className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" style={{ color: "#a5b4fc" }} />
+                          </span>
                         </div>
-                      ) : (
-                        savedPrompts.map(prompt => (
-                          <SidebarMenuItem key={prompt.id}>
-                            <SidebarMenuButton
-                              onClick={() => onSelectSavedPrompt(prompt)}
-                              data-testid={`saved-prompt-${prompt.id}`}
-                              className="group py-2.5 px-3 rounded-lg"
-                              style={{ backgroundColor: "transparent" }}
-                            >
-                              <div className="flex items-center justify-between w-full gap-2">
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-medium truncate" style={{ color: "#18181b" }}>
-                                    {prompt.name}
-                                  </p>
-                                  <p className="text-[10px] truncate mt-0.5" style={{ color: "#6366f1" }}>
-                                    {prompt.targetTool}
-                                  </p>
-                                </div>
-                                <button
-                                  onClick={e => { e.stopPropagation(); onDeleteSavedPrompt(prompt.id); }}
-                                  className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"
-                                >
-                                  <Trash2 className="w-3 h-3" style={{ color: "#a5b4fc" }} />
-                                </button>
-                              </div>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))
-                      )}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
+                      </button>
+                    ))
+                  )}
+                </div>
               </ScrollArea>
             </TabsContent>
 
             <TabsContent value="chats" className="mt-3">
               <ScrollArea className="h-[calc(100vh-180px)]">
-                <SidebarGroup>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {conversations.length === 0 ? (
-                        <div className="px-3 py-8 text-center">
-                          <MessageSquare className="w-5 h-5 mx-auto mb-2" style={{ color: "#c7d2fe" }} />
-                          <p className="text-xs" style={{ color: "#a5b4fc" }}>No chats yet</p>
+                <div className="space-y-0.5">
+                  {conversations.length === 0 ? (
+                    <div className="px-3 py-8 text-center">
+                      <MessageSquare className="w-5 h-5 mx-auto mb-2" style={{ color: "#c7d2fe" }} />
+                      <p className="text-xs" style={{ color: "#a5b4fc" }}>No chats yet</p>
+                    </div>
+                  ) : (
+                    conversations.map(conv => (
+                      <button
+                        key={conv.id}
+                        onClick={() => onSelectConversation(conv.id)}
+                        data-testid={`conversation-${conv.id}`}
+                        className="group w-full text-left py-2.5 px-3 rounded-lg transition-colors"
+                        style={{
+                          backgroundColor: activeConversationId === conv.id ? "#c7d2fe" : "transparent",
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p
+                            className="text-xs truncate flex-1"
+                            style={{ color: activeConversationId === conv.id ? "#4338ca" : "#18181b" }}
+                          >
+                            {conv.title}
+                          </p>
+                          <span
+                            onClick={e => { e.stopPropagation(); onDeleteConversation(conv.id); }}
+                            className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" style={{ color: "#a5b4fc" }} />
+                          </span>
                         </div>
-                      ) : (
-                        conversations.map(conv => (
-                          <SidebarMenuItem key={conv.id}>
-                            <SidebarMenuButton
-                              onClick={() => onSelectConversation(conv.id)}
-                              data-testid={`conversation-${conv.id}`}
-                              className="group py-2.5 px-3 rounded-lg"
-                              style={{
-                                backgroundColor: activeConversationId === conv.id ? "#c7d2fe" : "transparent",
-                              }}
-                            >
-                              <div className="flex items-center justify-between w-full gap-2">
-                                <p
-                                  className="text-xs truncate flex-1"
-                                  style={{ color: activeConversationId === conv.id ? "#4338ca" : "#18181b" }}
-                                >
-                                  {conv.title}
-                                </p>
-                                <button
-                                  onClick={e => { e.stopPropagation(); onDeleteConversation(conv.id); }}
-                                  className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity"
-                                >
-                                  <Trash2 className="w-3 h-3" style={{ color: "#a5b4fc" }} />
-                                </button>
-                              </div>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))
-                      )}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
+                      </button>
+                    ))
+                  )}
+                </div>
               </ScrollArea>
             </TabsContent>
           </Tabs>
-        </SidebarContent>
+        </div>
 
-        {/* Footer — profile when logged in, login/signup when guest */}
-        <SidebarFooter
-          className="px-3 pb-3 pt-2"
-          style={{ borderTop: "1px solid #c7d2fe", backgroundColor: "#e4ebff" }}
+        {/* Footer */}
+        <div
+          className="flex-shrink-0 px-3 pb-3 pt-2"
+          style={{ borderTop: "1px solid #c7d2fe" }}
         >
           {user ? (
-            /* Logged-in profile row */
             <div className="flex items-center gap-3 px-2 py-2 rounded-xl">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold"
@@ -257,7 +234,6 @@ export function AppSidebar({
               </button>
             </div>
           ) : (
-            /* Guest — login / sign up */
             <div className="flex flex-col gap-2 px-1">
               <button
                 onClick={() => setLocation("/login?mode=signup")}
@@ -268,7 +244,7 @@ export function AppSidebar({
               </button>
               <button
                 onClick={() => setLocation("/login")}
-                className="w-full text-xs py-2 rounded-xl font-medium flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full text-xs py-2 rounded-xl font-medium flex items-center justify-center gap-1.5"
                 style={{ color: "#6366f1", border: "1px solid #c7d2fe" }}
               >
                 <LogIn className="w-3 h-3" />
@@ -276,7 +252,7 @@ export function AppSidebar({
               </button>
             </div>
           )}
-        </SidebarFooter>
+        </div>
 
         {/* Drag-to-resize handle */}
         <div
@@ -284,7 +260,7 @@ export function AppSidebar({
           className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize z-10 transition-colors hover:bg-indigo-300"
           style={{ backgroundColor: "#c7d2fe" }}
         />
-      </Sidebar>
+      </div>
 
       {/* Settings modal */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>

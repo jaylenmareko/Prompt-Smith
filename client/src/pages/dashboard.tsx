@@ -405,19 +405,27 @@ export default function DashboardPage() {
       } as React.CSSProperties}
     >
       <div className="flex h-screen w-full" style={{ backgroundColor: "#f0f4ff" }}>
-        <AppSidebar
-          conversations={conversations}
-          savedPrompts={savedPrompts}
-          onSelectConversation={loadConversation}
-          onSelectSavedPrompt={loadSavedPrompt}
-          onNewChat={startNewChat}
-          activeConversationId={currentConvId}
-          onDeleteConversation={deleteConversation}
-          onDeleteSavedPrompt={deleteSavedPrompt}
-          sidebarWidth={sidebarWidth}
-          onResize={setSidebarWidth}
-          user={user}
-        />
+        {/* Sidebar wrapper — collapses to 0 when closed so content fills the screen */}
+        <div
+          className="flex-shrink-0 overflow-hidden"
+          style={{ width: sidebarOpen ? sidebarWidth : 0, transition: "width 0.2s ease" }}
+        >
+          <div style={{ width: sidebarWidth, height: "100%" }}>
+            <AppSidebar
+              conversations={conversations}
+              savedPrompts={savedPrompts}
+              onSelectConversation={loadConversation}
+              onSelectSavedPrompt={loadSavedPrompt}
+              onNewChat={startNewChat}
+              activeConversationId={currentConvId}
+              onDeleteConversation={deleteConversation}
+              onDeleteSavedPrompt={deleteSavedPrompt}
+              sidebarWidth={sidebarWidth}
+              onResize={setSidebarWidth}
+              user={user}
+            />
+          </div>
+        </div>
 
         <div className="flex flex-col flex-1 min-w-0">
           <header
