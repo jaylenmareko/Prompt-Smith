@@ -61,7 +61,7 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <h1
             className="text-sm font-semibold tracking-[0.3em] uppercase mb-3"
-            style={{ color: "#c8a96e" }}
+            style={{ color: "#d97706" }}
             data-testid="text-logo"
           >
             PromptForge
@@ -142,7 +142,7 @@ export default function LoginPage() {
             data-testid="button-submit-auth"
             className="w-full h-11 text-sm font-medium border-0"
             style={{
-              backgroundColor: "#c8a96e",
+              backgroundColor: "#d97706",
               color: "#0f0f0f",
             }}
           >
@@ -164,7 +164,7 @@ export default function LoginPage() {
             }}
             data-testid="button-toggle-auth-mode"
             className="text-sm transition-colors"
-            style={{ color: "#c8a96e" }}
+            style={{ color: "#d97706" }}
           >
             {isSignup ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
           </button>
