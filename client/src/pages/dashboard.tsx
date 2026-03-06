@@ -1,13 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
@@ -17,31 +12,43 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Copy, Bookmark, Loader2, MicOff, Menu, User, Sparkles } from "lucide-react";
-import type { Conversation, ChatMessage, SavedPrompt } from "@shared/schema";
+import { Mic, Send, Copy, Bookmark, Loader2, MicOff, Sparkles, User } from "lucide-react";
+import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
 
-interface LocalMessage {
-  id: number | string;
-  role: string;
-  content: string;
-  targetTool?: string | null;
-  isStreaming?: boolean;
+const STORAGE_KEYS = {
+  conversations: "ps_conversations",
+  savedPrompts: "ps_saved_prompts",
+};
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function getStoredConversations(): LocalConversation[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.conversations) || "[]"); }
+  catch { return []; }
+}
+
+function getStoredSavedPrompts(): LocalSavedPrompt[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.savedPrompts) || "[]"); }
+  catch { return []; }
 }
 
 export default function DashboardPage() {
-  const { user, isLoading: authLoading } = useAuth();
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const [inputValue, setInputValue] = useState("");
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [messages, setMessages] = useState<LocalMessage[]>([]);
+  const [currentConvId, setCurrentConvId] = useState<string | null>(null);
+  const [currentConvTitle, setCurrentConvTitle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [detectedTool, setDetectedTool] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [conversations, setConversations] = useState<LocalConversation[]>(getStoredConversations);
+  const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(getStoredSavedPrompts);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saveTarget, setSaveTarget] = useState<{ promptText: string; targetTool: string; userInput: string } | null>(null);
@@ -50,41 +57,38 @@ export default function DashboardPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  const { data: conversationsData } = useQuery<Conversation[]>({
-    queryKey: ["/api/conversations"],
-    enabled: !!user,
-  });
-
-  const { data: savedPromptsData } = useQuery<SavedPrompt[]>({
-    queryKey: ["/api/saved-prompts"],
-    enabled: !!user,
-  });
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      setLocation("/login");
-    }
-  }, [user, authLoading, setLocation]);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const loadConversation = useCallback(async (convId: number) => {
-    try {
-      const res = await fetch(`/api/conversations/${convId}/messages`, { credentials: "include" });
-      if (res.ok) {
-        const msgs = await res.json();
-        setMessages(msgs);
-        setActiveConversationId(convId);
-        setDetectedTool(msgs.length > 0 ? msgs[0].targetTool : null);
-      }
-    } catch {
-      toast({ title: "Failed to load conversation", variant: "destructive" });
-    }
-  }, [toast]);
+  const persistConversation = (convId: string, title: string, finalMessages: LocalMessage[]) => {
+    setConversations(prev => {
+      const existing = prev.findIndex(c => c.id === convId);
+      const conv: LocalConversation = {
+        id: convId,
+        title,
+        messages: finalMessages,
+        createdAt: existing >= 0 ? prev[existing].createdAt : new Date().toISOString(),
+      };
+      const updated = existing >= 0
+        ? prev.map(c => c.id === convId ? conv : c)
+        : [conv, ...prev].slice(0, 50);
+      localStorage.setItem(STORAGE_KEYS.conversations, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
-  const loadSavedPrompt = useCallback((prompt: SavedPrompt) => {
+  const loadConversation = useCallback((id: string) => {
+    const conv = getStoredConversations().find(c => c.id === id);
+    if (conv) {
+      setMessages(conv.messages);
+      setCurrentConvId(conv.id);
+      setCurrentConvTitle(conv.title);
+      setDetectedTool(conv.messages.find(m => m.role === "assistant")?.targetTool || null);
+    }
+  }, []);
+
+  const loadSavedPrompt = useCallback((prompt: LocalSavedPrompt) => {
     setInputValue(prompt.userInput);
     setSelectedTool(prompt.targetTool);
     inputRef.current?.focus();
@@ -92,10 +96,28 @@ export default function DashboardPage() {
 
   const startNewChat = useCallback(() => {
     setMessages([]);
-    setActiveConversationId(null);
+    setCurrentConvId(null);
+    setCurrentConvTitle("");
     setDetectedTool(null);
     setInputValue("");
     setSelectedTool(null);
+  }, []);
+
+  const deleteConversation = useCallback((id: string) => {
+    setConversations(prev => {
+      const updated = prev.filter(c => c.id !== id);
+      localStorage.setItem(STORAGE_KEYS.conversations, JSON.stringify(updated));
+      return updated;
+    });
+    if (currentConvId === id) startNewChat();
+  }, [currentConvId, startNewChat]);
+
+  const deleteSavedPrompt = useCallback((id: string) => {
+    setSavedPrompts(prev => {
+      const updated = prev.filter(p => p.id !== id);
+      localStorage.setItem(STORAGE_KEYS.savedPrompts, JSON.stringify(updated));
+      return updated;
+    });
   }, []);
 
   const handleGenerate = async () => {
@@ -105,29 +127,26 @@ export default function DashboardPage() {
     setInputValue("");
     setIsGenerating(true);
 
-    const userMsg: LocalMessage = {
-      id: `temp-user-${Date.now()}`,
-      role: "user",
-      content: userInput,
-    };
-    const assistantMsg: LocalMessage = {
-      id: `temp-assistant-${Date.now()}`,
-      role: "assistant",
-      content: "",
-      isStreaming: true,
-    };
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
+    let convId = currentConvId;
+    let title = currentConvTitle;
+    if (!convId) {
+      convId = genId();
+      title = userInput.length > 50 ? userInput.substring(0, 50) + "..." : userInput;
+      setCurrentConvId(convId);
+      setCurrentConvTitle(title);
+    }
+
+    const priorMessages = [...messages];
+    const userMsg: LocalMessage = { id: genId(), role: "user", content: userInput };
+    const assistantMsgId = genId();
+    const assistantMsg: LocalMessage = { id: assistantMsgId, role: "assistant", content: "", isStreaming: true };
+    setMessages(prev => [...prev, userMsg, assistantMsg]);
 
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          input: userInput,
-          targetTool: selectedTool,
-          conversationId: activeConversationId,
-        }),
+        body: JSON.stringify({ input: userInput, targetTool: selectedTool }),
       });
 
       if (!res.ok) {
@@ -137,74 +156,59 @@ export default function DashboardPage() {
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
-
       if (!reader) throw new Error("No response stream");
 
       let fullContent = "";
-      let convId = activeConversationId;
       let tool = selectedTool;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.conversationId) {
-                convId = data.conversationId;
-                setActiveConversationId(convId);
-              }
-              if (data.detectedTool) {
-                tool = data.detectedTool;
-                setDetectedTool(data.detectedTool);
-              }
-              if (data.content) {
-                fullContent += data.content;
-                setMessages((prev) => {
-                  const updated = [...prev];
-                  const last = updated[updated.length - 1];
-                  if (last && last.role === "assistant") {
-                    updated[updated.length - 1] = { ...last, content: fullContent, targetTool: tool };
-                  }
-                  return updated;
-                });
-              }
-              if (data.done) {
-                setMessages((prev) => {
-                  const updated = [...prev];
-                  const last = updated[updated.length - 1];
-                  if (last) {
-                    updated[updated.length - 1] = { ...last, isStreaming: false };
-                  }
-                  return updated;
-                });
-              }
-              if (data.error) {
-                throw new Error(data.error);
-              }
-            } catch (parseErr: any) {
-              if (parseErr.message && !parseErr.message.includes("Unexpected")) {
-                throw parseErr;
-              }
+        for (const line of chunk.split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.detectedTool) {
+              tool = data.detectedTool;
+              setDetectedTool(data.detectedTool);
             }
+            if (data.content) {
+              fullContent += data.content;
+              setMessages(prev => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last?.role === "assistant") {
+                  updated[updated.length - 1] = { ...last, content: fullContent, targetTool: tool };
+                }
+                return updated;
+              });
+            }
+            if (data.done) {
+              setMessages(prev => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last) updated[updated.length - 1] = { ...last, isStreaming: false };
+                return updated;
+              });
+            }
+            if (data.error) throw new Error(data.error);
+          } catch (e: any) {
+            if (e.message && !e.message.includes("Unexpected")) throw e;
           }
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      const finalMessages: LocalMessage[] = [
+        ...priorMessages,
+        userMsg,
+        { id: assistantMsgId, role: "assistant", content: fullContent, targetTool: tool, isStreaming: false },
+      ];
+      persistConversation(convId, title, finalMessages);
+
     } catch (error: any) {
-      toast({
-        title: "Generation failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-      setMessages((prev) => prev.filter((m) => m.id !== assistantMsg.id));
+      toast({ title: "Generation failed", description: error.message || "Please try again", variant: "destructive" });
+      setMessages(prev => prev.filter(m => m.id !== assistantMsgId));
     } finally {
       setIsGenerating(false);
     }
@@ -223,31 +227,31 @@ export default function DashboardPage() {
   };
 
   const handleSave = (msg: LocalMessage) => {
-    const userMsg = messages.find(
-      (m, i) => m.role === "user" && messages[i + 1]?.id === msg.id
-    );
+    const userMsgIndex = messages.findIndex((m, i) => m.role === "user" && messages[i + 1]?.id === msg.id);
     setSaveTarget({
       promptText: msg.content,
-      targetTool: (msg.targetTool as string) || selectedTool || "ChatGPT",
-      userInput: userMsg?.content || "",
+      targetTool: msg.targetTool || selectedTool || "ChatGPT",
+      userInput: userMsgIndex >= 0 ? messages[userMsgIndex].content : "",
     });
     setSaveName("");
     setSaveDialogOpen(true);
   };
 
-  const confirmSave = async () => {
+  const confirmSave = () => {
     if (!saveName.trim() || !saveTarget) return;
-    try {
-      await apiRequest("POST", "/api/saved-prompts", {
-        name: saveName.trim(),
-        ...saveTarget,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-prompts"] });
-      toast({ title: "Prompt saved" });
-      setSaveDialogOpen(false);
-    } catch (error: any) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
-    }
+    const prompt: LocalSavedPrompt = {
+      id: genId(),
+      name: saveName.trim(),
+      ...saveTarget,
+      createdAt: new Date().toISOString(),
+    };
+    setSavedPrompts(prev => {
+      const updated = [prompt, ...prev];
+      localStorage.setItem(STORAGE_KEYS.savedPrompts, JSON.stringify(updated));
+      return updated;
+    });
+    toast({ title: "Prompt saved" });
+    setSaveDialogOpen(false);
   };
 
   const toggleVoice = () => {
@@ -256,78 +260,129 @@ export default function DashboardPage() {
       setIsListening(false);
       return;
     }
-
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast({ title: "Voice not supported", description: "Use Chrome for voice input", variant: "destructive" });
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
-
     recognition.onresult = (event: any) => {
       let transcript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
       }
-      setInputValue((prev) => {
+      setInputValue(prev => {
         const base = prev.replace(/\s*\[listening\.\.\.\]\s*$/, "");
         return base + (base ? " " : "") + transcript;
       });
     };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
   };
 
-  if (authLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center" style={{ backgroundColor: "#0f0f0f" }}>
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#c8a96e" }} />
-      </div>
-    );
-  }
-
-  if (!user) return null;
-
   const hasMessages = messages.length > 0;
 
-  const sidebarStyle = {
-    "--sidebar-width": "17rem",
-    "--sidebar-width-icon": "0rem",
-  };
+  const inputBox = (testIdSuffix: string, disabled = false) => (
+    <div
+      className="flex items-end gap-2 rounded-2xl px-4 py-3"
+      style={{ backgroundColor: "#f4f4f5", border: "1px solid #e4e4e7" }}
+    >
+      <textarea
+        ref={inputRef}
+        value={inputValue}
+        onChange={e => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Describe what you want..."
+        rows={1}
+        disabled={disabled}
+        data-testid={`input-prompt${testIdSuffix}`}
+        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-zinc-400 disabled:opacity-50"
+        style={{ color: "#18181b", minHeight: "24px", maxHeight: "120px" }}
+        onInput={e => {
+          const el = e.target as HTMLTextAreaElement;
+          el.style.height = "auto";
+          el.style.height = Math.min(el.scrollHeight, 120) + "px";
+        }}
+      />
+      <button
+        onClick={toggleVoice}
+        data-testid={`button-mic${testIdSuffix}`}
+        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+        style={{ color: isListening ? "#6366f1" : "#71717a" }}
+      >
+        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+      </button>
+      <button
+        onClick={handleGenerate}
+        disabled={!inputValue.trim() || isGenerating}
+        data-testid={`button-send${testIdSuffix}`}
+        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
+        style={{ backgroundColor: inputValue.trim() ? "#18181b" : "#e4e4e7", color: "#ffffff" }}
+      >
+        {isGenerating && testIdSuffix === "-chat" ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Send className="w-4 h-4" />
+        )}
+      </button>
+    </div>
+  );
+
+  const toolPills = (testPrefix: string, compact = false) => (
+    <div className={`flex flex-wrap gap-2 ${compact ? "mt-3" : "mt-4"} justify-center`}>
+      {TOOL_PILLS.map(tool => (
+        <button
+          key={tool}
+          onClick={() => setSelectedTool(selectedTool === tool ? null : tool)}
+          data-testid={`pill-${testPrefix}-${tool.toLowerCase().replace(/[·\s]/g, "")}`}
+          className="rounded-full text-xs font-medium transition-all"
+          style={{
+            padding: compact ? "4px 10px" : "6px 12px",
+            backgroundColor: selectedTool === tool ? "#eef2ff" : "#f4f4f5",
+            color: selectedTool === tool ? "#6366f1" : "#71717a",
+            border: `1px solid ${selectedTool === tool ? "#c7d2fe" : "#e4e4e7"}`,
+          }}
+        >
+          {tool}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-      <div className="flex h-screen w-full" style={{ backgroundColor: "#0f0f0f" }}>
+    <SidebarProvider style={{ "--sidebar-width": "17rem", "--sidebar-width-icon": "0rem" } as React.CSSProperties}>
+      <div className="flex h-screen w-full" style={{ backgroundColor: "#ffffff" }}>
         <AppSidebar
-          conversations={conversationsData || []}
-          savedPrompts={savedPromptsData || []}
+          conversations={conversations}
+          savedPrompts={savedPrompts}
           onSelectConversation={loadConversation}
           onSelectSavedPrompt={loadSavedPrompt}
           onNewChat={startNewChat}
-          activeConversationId={activeConversationId}
+          activeConversationId={currentConvId}
+          onDeleteConversation={deleteConversation}
+          onDeleteSavedPrompt={deleteSavedPrompt}
         />
 
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center gap-2 px-4 h-12 shrink-0" style={{ borderBottom: "1px solid #1e1e1e" }}>
-            <SidebarTrigger data-testid="button-sidebar-toggle" className="text-[#f0ece4aa]" />
+          <header
+            className="flex items-center gap-2 px-4 h-12 shrink-0"
+            style={{ borderBottom: "1px solid #e4e4e7", backgroundColor: "#ffffff" }}
+          >
+            <SidebarTrigger className="text-zinc-500" />
             {detectedTool && hasMessages && (
-              <Badge variant="outline" className="text-xs border-0" style={{ backgroundColor: "#1e1e1e", color: "#c8a96e" }} data-testid="badge-detected-tool">
-                Detected: {detectedTool}
-              </Badge>
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: "#eef2ff", color: "#6366f1" }}
+                data-testid="badge-detected-tool"
+              >
+                {detectedTool}
+              </span>
             )}
           </header>
 
@@ -336,10 +391,10 @@ export default function DashboardPage() {
               <div className="flex-1 flex flex-col items-center justify-center px-6">
                 <h2
                   className="text-2xl md:text-3xl font-light text-center mb-10 leading-relaxed max-w-xl"
-                  style={{ color: "#f0ece4" }}
+                  style={{ color: "#18181b" }}
                   data-testid="text-welcome-heading"
                 >
-                  Tell me — what you want in your prompt, and for what app?
+                  What do you want to prompt — and which AI are you using?
                 </h2>
 
                 <button
@@ -347,74 +402,20 @@ export default function DashboardPage() {
                   data-testid="button-mic-center"
                   className="w-20 h-20 rounded-full flex items-center justify-center mb-10 transition-all duration-300"
                   style={{
-                    backgroundColor: isListening ? "#c8a96e" : "#1e1e1e",
-                    border: `2px solid ${isListening ? "#c8a96e" : "#2a2a2a"}`,
+                    backgroundColor: isListening ? "#6366f1" : "#f4f4f5",
+                    border: `2px solid ${isListening ? "#6366f1" : "#e4e4e7"}`,
                   }}
                 >
                   {isListening ? (
-                    <MicOff className="w-8 h-8" style={{ color: "#0f0f0f" }} />
+                    <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
                   ) : (
-                    <Mic className="w-8 h-8" style={{ color: "#c8a96e" }} />
+                    <Mic className="w-8 h-8" style={{ color: "#6366f1" }} />
                   )}
                 </button>
 
                 <div className="w-full max-w-2xl">
-                  <div
-                    className="flex items-end gap-2 rounded-2xl px-4 py-3"
-                    style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}
-                  >
-                    <textarea
-                      ref={inputRef}
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Describe what you want..."
-                      rows={1}
-                      data-testid="input-prompt"
-                      className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6"
-                      style={{ color: "#f0ece4", minHeight: "24px", maxHeight: "120px" }}
-                      onInput={(e) => {
-                        const el = e.target as HTMLTextAreaElement;
-                        el.style.height = "auto";
-                        el.style.height = Math.min(el.scrollHeight, 120) + "px";
-                      }}
-                    />
-                    <button
-                      onClick={toggleVoice}
-                      data-testid="button-mic-input"
-                      className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                      style={{ color: isListening ? "#c8a96e" : "#f0ece4aa" }}
-                    >
-                      {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={handleGenerate}
-                      disabled={!inputValue.trim() || isGenerating}
-                      data-testid="button-send"
-                      className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-                      style={{ backgroundColor: inputValue.trim() ? "#c8a96e" : "#2a2a2a", color: "#0f0f0f" }}
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mt-4 justify-center">
-                    {TOOL_PILLS.map((tool) => (
-                      <button
-                        key={tool}
-                        onClick={() => setSelectedTool(selectedTool === tool ? null : tool)}
-                        data-testid={`pill-${tool.toLowerCase().replace(/[·\s]/g, "")}`}
-                        className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                        style={{
-                          backgroundColor: selectedTool === tool ? "#c8a96e22" : "#1a1a1a",
-                          color: selectedTool === tool ? "#c8a96e" : "#f0ece4aa",
-                          border: `1px solid ${selectedTool === tool ? "#c8a96e44" : "#2a2a2a"}`,
-                        }}
-                      >
-                        {tool}
-                      </button>
-                    ))}
-                  </div>
+                  {inputBox("")}
+                  {toolPills("welcome")}
                 </div>
               </div>
             ) : (
@@ -424,10 +425,10 @@ export default function DashboardPage() {
                     {messages.map((msg, index) => (
                       <div key={msg.id} className="flex gap-3" data-testid={`message-${msg.role}-${index}`}>
                         <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-medium"
+                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                           style={{
-                            backgroundColor: msg.role === "user" ? "#2a2a2a" : "#c8a96e22",
-                            color: msg.role === "user" ? "#f0ece4" : "#c8a96e",
+                            backgroundColor: msg.role === "user" ? "#f4f4f5" : "#eef2ff",
+                            color: msg.role === "user" ? "#71717a" : "#6366f1",
                           }}
                         >
                           {msg.role === "user" ? (
@@ -437,19 +438,21 @@ export default function DashboardPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium mb-1.5" style={{ color: "#f0ece4aa" }}>
-                            {msg.role === "user" ? "You" : "PromptForge"}
+                          <p className="text-xs font-medium mb-1.5" style={{ color: "#71717a" }}>
+                            {msg.role === "user" ? "You" : "Prompt Smith"}
                           </p>
                           <div
                             className="text-sm leading-relaxed whitespace-pre-wrap break-words"
-                            style={{ color: "#f0ece4" }}
+                            style={{ color: "#18181b" }}
                           >
                             {msg.content}
                             {msg.isStreaming && (
-                              <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#c8a96e" }} />
+                              <span
+                                className="inline-block w-1.5 h-4 ml-0.5 animate-pulse"
+                                style={{ backgroundColor: "#6366f1" }}
+                              />
                             )}
                           </div>
-
                           {msg.role === "assistant" && !msg.isStreaming && msg.content && (
                             <div className="flex gap-2 mt-3">
                               <Button
@@ -458,7 +461,7 @@ export default function DashboardPage() {
                                 onClick={() => copyToClipboard(msg.content)}
                                 data-testid={`button-copy-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
-                                style={{ color: "#f0ece4aa" }}
+                                style={{ color: "#71717a" }}
                               >
                                 <Copy className="w-3 h-3" />
                                 Copy
@@ -469,7 +472,7 @@ export default function DashboardPage() {
                                 onClick={() => handleSave(msg)}
                                 data-testid={`button-save-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
-                                style={{ color: "#f0ece4aa" }}
+                                style={{ color: "#71717a" }}
                               >
                                 <Bookmark className="w-3 h-3" />
                                 Save
@@ -483,68 +486,10 @@ export default function DashboardPage() {
                   </div>
                 </ScrollArea>
 
-                <div className="shrink-0 px-4 pb-4 pt-2">
+                <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid #e4e4e7" }}>
                   <div className="max-w-2xl mx-auto">
-                    <div
-                      className="flex items-end gap-2 rounded-2xl px-4 py-3"
-                      style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}
-                    >
-                      <textarea
-                        ref={inputRef}
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Describe what you want..."
-                        rows={1}
-                        disabled={isGenerating}
-                        data-testid="input-prompt-chat"
-                        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 disabled:opacity-50"
-                        style={{ color: "#f0ece4", minHeight: "24px", maxHeight: "120px" }}
-                        onInput={(e) => {
-                          const el = e.target as HTMLTextAreaElement;
-                          el.style.height = "auto";
-                          el.style.height = Math.min(el.scrollHeight, 120) + "px";
-                        }}
-                      />
-                      <button
-                        onClick={toggleVoice}
-                        data-testid="button-mic-chat"
-                        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                        style={{ color: isListening ? "#c8a96e" : "#f0ece4aa" }}
-                      >
-                        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={handleGenerate}
-                        disabled={!inputValue.trim() || isGenerating}
-                        data-testid="button-send-chat"
-                        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-                        style={{ backgroundColor: inputValue.trim() ? "#c8a96e" : "#2a2a2a", color: "#0f0f0f" }}
-                      >
-                        {isGenerating ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Send className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-3 justify-center">
-                      {TOOL_PILLS.map((tool) => (
-                        <button
-                          key={tool}
-                          onClick={() => setSelectedTool(selectedTool === tool ? null : tool)}
-                          data-testid={`pill-chat-${tool.toLowerCase().replace(/[·\s]/g, "")}`}
-                          className="px-2.5 py-1 rounded-full text-xs transition-all"
-                          style={{
-                            backgroundColor: selectedTool === tool ? "#c8a96e22" : "transparent",
-                            color: selectedTool === tool ? "#c8a96e" : "#f0ece466",
-                            border: `1px solid ${selectedTool === tool ? "#c8a96e44" : "#2a2a2a"}`,
-                          }}
-                        >
-                          {tool}
-                        </button>
-                      ))}
-                    </div>
+                    {inputBox("-chat", isGenerating)}
+                    {toolPills("chat", true)}
                   </div>
                 </div>
               </>
@@ -554,27 +499,22 @@ export default function DashboardPage() {
       </div>
 
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle style={{ color: "#f0ece4" }}>Save Prompt</DialogTitle>
+            <DialogTitle>Save Prompt</DialogTitle>
           </DialogHeader>
           <Input
             value={saveName}
-            onChange={(e) => setSaveName(e.target.value)}
+            onChange={e => setSaveName(e.target.value)}
             placeholder="Give it a short name..."
             data-testid="input-save-name"
-            className="border-0"
-            style={{ backgroundColor: "#1a1a1a", color: "#f0ece4" }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") confirmSave();
-            }}
+            onKeyDown={e => { if (e.key === "Enter") confirmSave(); }}
           />
           <DialogFooter>
             <Button
               onClick={confirmSave}
               disabled={!saveName.trim()}
               data-testid="button-confirm-save"
-              style={{ backgroundColor: "#c8a96e", color: "#0f0f0f" }}
             >
               Save
             </Button>
