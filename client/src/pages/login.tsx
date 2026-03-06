@@ -8,7 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState(() =>
+    new URLSearchParams(window.location.search).get("mode") === "signup"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -12,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Copy, Bookmark, Loader2, MicOff, Sparkles, User } from "lucide-react";
+import { Mic, Send, Copy, Bookmark, Loader2, MicOff, Sparkles, User, X } from "lucide-react";
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
@@ -38,8 +40,13 @@ function getStoredSavedPrompts(): LocalSavedPrompt[] {
 
 export default function DashboardPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const { user, isLoading: authLoading } = useAuth();
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(272);
+  const [showNudge, setShowNudge] = useState(false);
+
   const [inputValue, setInputValue] = useState("");
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [messages, setMessages] = useState<LocalMessage[]>([]);
@@ -57,6 +64,21 @@ export default function DashboardPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  // Once auth resolves: open sidebar for guests, keep closed for logged-in users
+  useEffect(() => {
+    if (!authLoading) {
+      setSidebarOpen(!user);
+    }
+  }, [authLoading, user]);
+
+  // Show login nudge after 3 seconds if not logged in
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) return;
+    const t = setTimeout(() => setShowNudge(true), 3000);
+    return () => clearTimeout(t);
+  }, [authLoading, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -170,10 +192,7 @@ export default function DashboardPage() {
           if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.detectedTool) {
-              tool = data.detectedTool;
-              setDetectedTool(data.detectedTool);
-            }
+            if (data.detectedTool) { tool = data.detectedTool; setDetectedTool(data.detectedTool); }
             if (data.content) {
               fullContent += data.content;
               setMessages(prev => {
@@ -206,6 +225,9 @@ export default function DashboardPage() {
         { id: assistantMsgId, role: "assistant", content: fullContent, targetTool: tool, isStreaming: false },
       ];
       persistConversation(convId, title, finalMessages);
+
+      // Open sidebar after first prompt for logged-in users
+      if (user) setSidebarOpen(true);
 
     } catch (error: any) {
       toast({ title: "Generation failed", description: error.message || "Please try again", variant: "destructive" });
@@ -335,7 +357,7 @@ export default function DashboardPage() {
     </div>
   );
 
-  const platformLabel = (compact = false) => (
+  const platformHint = (compact = false) => (
     <p
       className={`text-center ${compact ? "mt-2 text-[11px]" : "mt-3 text-xs"}`}
       style={{ color: "#818cf8" }}
@@ -365,8 +387,18 @@ export default function DashboardPage() {
     </div>
   );
 
+  if (authLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center" style={{ backgroundColor: "#f0f4ff" }}>
+        <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#6366f1" }} />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider
+      open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
       style={{
         "--sidebar-width": `${sidebarWidth}px`,
         "--sidebar-width-icon": "3rem",
@@ -384,6 +416,7 @@ export default function DashboardPage() {
           onDeleteSavedPrompt={deleteSavedPrompt}
           sidebarWidth={sidebarWidth}
           onResize={setSidebarWidth}
+          user={user}
         />
 
         <div className="flex flex-col flex-1 min-w-0">
@@ -400,6 +433,25 @@ export default function DashboardPage() {
               >
                 {detectedTool}
               </span>
+            )}
+            {/* Top-right login/signup — only for guests */}
+            {!user && (
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={() => setLocation("/login")}
+                  className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
+                  style={{ color: "#6366f1" }}
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => setLocation("/login?mode=signup")}
+                  className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
+                  style={{ backgroundColor: "#6366f1", color: "#ffffff" }}
+                >
+                  Sign up
+                </button>
+              </div>
             )}
           </header>
 
@@ -423,16 +475,14 @@ export default function DashboardPage() {
                     border: `2px solid ${isListening ? "#6366f1" : "#c7d2fe"}`,
                   }}
                 >
-                  {isListening ? (
-                    <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
-                  ) : (
-                    <Mic className="w-8 h-8" style={{ color: "#6366f1" }} />
-                  )}
+                  {isListening
+                    ? <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
+                    : <Mic className="w-8 h-8" style={{ color: "#6366f1" }} />}
                 </button>
 
                 <div className="w-full max-w-2xl">
                   {inputBox("")}
-                  {platformLabel()}
+                  {platformHint()}
                   {toolPills("welcome")}
                 </div>
               </div>
@@ -449,51 +499,37 @@ export default function DashboardPage() {
                             color: "#6366f1",
                           }}
                         >
-                          {msg.role === "user" ? (
-                            <User className="w-3.5 h-3.5" />
-                          ) : (
-                            <Sparkles className="w-3.5 h-3.5" />
-                          )}
+                          {msg.role === "user" ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium mb-1.5" style={{ color: "#818cf8" }}>
                             {msg.role === "user" ? "You" : "Prompt Smith"}
                           </p>
-                          <div
-                            className="text-sm leading-relaxed whitespace-pre-wrap break-words"
-                            style={{ color: "#18181b" }}
-                          >
+                          <div className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: "#18181b" }}>
                             {msg.content}
                             {msg.isStreaming && (
-                              <span
-                                className="inline-block w-1.5 h-4 ml-0.5 animate-pulse"
-                                style={{ backgroundColor: "#6366f1" }}
-                              />
+                              <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#6366f1" }} />
                             )}
                           </div>
                           {msg.role === "assistant" && !msg.isStreaming && msg.content && (
                             <div className="flex gap-2 mt-3">
                               <Button
-                                size="sm"
-                                variant="ghost"
+                                size="sm" variant="ghost"
                                 onClick={() => copyToClipboard(msg.content)}
                                 data-testid={`button-copy-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
                                 style={{ color: "#818cf8" }}
                               >
-                                <Copy className="w-3 h-3" />
-                                Copy
+                                <Copy className="w-3 h-3" /> Copy
                               </Button>
                               <Button
-                                size="sm"
-                                variant="ghost"
+                                size="sm" variant="ghost"
                                 onClick={() => handleSave(msg)}
                                 data-testid={`button-save-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
                                 style={{ color: "#818cf8" }}
                               >
-                                <Bookmark className="w-3 h-3" />
-                                Save
+                                <Bookmark className="w-3 h-3" /> Save
                               </Button>
                             </div>
                           )}
@@ -507,7 +543,7 @@ export default function DashboardPage() {
                 <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid #d0d8f8" }}>
                   <div className="max-w-2xl mx-auto">
                     {inputBox("-chat", isGenerating)}
-                    {platformLabel(true)}
+                    {platformHint(true)}
                     {toolPills("chat", true)}
                   </div>
                 </div>
@@ -517,11 +553,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Save dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Save Prompt</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Save Prompt</DialogTitle></DialogHeader>
           <Input
             value={saveName}
             onChange={e => setSaveName(e.target.value)}
@@ -530,16 +565,50 @@ export default function DashboardPage() {
             onKeyDown={e => { if (e.key === "Enter") confirmSave(); }}
           />
           <DialogFooter>
-            <Button
-              onClick={confirmSave}
-              disabled={!saveName.trim()}
-              data-testid="button-confirm-save"
-            >
+            <Button onClick={confirmSave} disabled={!saveName.trim()} data-testid="button-confirm-save">
               Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Login nudge — appears after 3 seconds for guests */}
+      {showNudge && !user && (
+        <div
+          className="fixed bottom-6 right-6 z-50 rounded-2xl p-4 max-w-xs shadow-lg"
+          style={{ backgroundColor: "#ffffff", border: "1px solid #e0e7ff" }}
+        >
+          <button
+            onClick={() => setShowNudge(false)}
+            className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-indigo-50"
+            style={{ color: "#a5b4fc" }}
+          >
+            <X className="w-3 h-3" />
+          </button>
+          <p className="text-sm font-semibold mb-1 pr-4" style={{ color: "#18181b" }}>
+            Save your prompts
+          </p>
+          <p className="text-xs mb-3" style={{ color: "#71717a" }}>
+            Create a free account to keep your history and saved prompts across sessions.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setLocation("/login")}
+              className="flex-1 text-xs py-1.5 rounded-lg font-medium border transition-colors"
+              style={{ color: "#6366f1", borderColor: "#c7d2fe" }}
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => setLocation("/login?mode=signup")}
+              className="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
+              style={{ backgroundColor: "#6366f1", color: "#ffffff" }}
+            >
+              Sign up free
+            </button>
+          </div>
+        </div>
+      )}
     </SidebarProvider>
   );
 }

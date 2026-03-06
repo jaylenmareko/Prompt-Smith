@@ -1,5 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth, hashPassword } from "./auth";
+import passport from "passport";
 import Anthropic from "@anthropic-ai/sdk";
 
 const TOOL_KEYWORDS: Record<string, string[]> = {
@@ -56,6 +59,52 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  setupAuth(app);
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) return res.status(400).json({ message: "Email and password are required" });
+      if (password.length < 6) return res.status(400).json({ message: "Password must be at least 6 characters" });
+      const existing = await storage.getProfileByEmail(email);
+      if (existing) return res.status(400).json({ message: "An account with this email already exists" });
+      const hashedPassword = await hashPassword(password);
+      const profile = await storage.createProfile(email, hashedPassword);
+      req.login(profile, (err) => {
+        if (err) return res.status(500).json({ message: "Login failed after registration" });
+        const { password: _, ...safeProfile } = profile;
+        res.status(201).json(safeProfile);
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) return res.status(500).json({ message: "Authentication error" });
+      if (!user) return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      req.login(user, (err) => {
+        if (err) return res.status(500).json({ message: "Login failed" });
+        const { password: _, ...safeProfile } = user;
+        res.json(safeProfile);
+      });
+    })(req, res, next);
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) return res.status(500).json({ message: "Logout failed" });
+      res.json({ message: "Logged out" });
+    });
+  });
+
+  app.get("/api/auth/user", (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const { password: _, ...safeProfile } = req.user!;
+    res.json(safeProfile);
+  });
+
   app.post("/api/generate", async (req, res) => {
     try {
       const { input, targetTool: selectedTool } = req.body;
