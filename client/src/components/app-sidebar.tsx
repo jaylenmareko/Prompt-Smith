@@ -130,7 +130,7 @@ export function AppSidebar({
       {/* Plain div — no shadcn Sidebar so it doesn't inject spacers into the flex layout */}
       <div
         className="flex flex-col h-full relative"
-        style={{ backgroundColor: "#f5f0e8", borderRight: "1px solid #e8dcc8", width: "100%" }}
+        style={{ backgroundColor: "#ffffff", borderRight: "1px solid #e5e2dd", width: "100%" }}
       >
         {/* Header */}
         <div className="px-4 pt-5 pb-3 flex-shrink-0">
@@ -148,7 +148,7 @@ export function AppSidebar({
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList
               className="w-full grid grid-cols-2 h-8 rounded-lg border-0"
-              style={{ backgroundColor: "#eddfc8" }}
+              style={{ backgroundColor: "#f0ece8" }}
             >
               <TabsTrigger
                 value="saved"
@@ -252,7 +252,7 @@ export function AppSidebar({
         {/* Footer */}
         <div
           className="flex-shrink-0 px-3 pb-3 pt-2 relative"
-          style={{ borderTop: "1px solid #e8dcc8" }}
+          style={{ borderTop: "1px solid #e5e2dd" }}
           ref={menuRef}
         >
           {/* Profile menu popup */}
