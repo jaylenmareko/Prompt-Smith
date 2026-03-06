@@ -62,7 +62,7 @@ export function AppSidebar({
     () => localStorage.getItem(NAME_KEY) || ""
   );
   const [menuOpen, setMenuOpen] = useState(false);
-  const [langHover, setLangHover] = useState(false);
+  const [langExpanded, setLangExpanded] = useState(false);
   const [selectedLang, setSelectedLang] = useState(
     () => localStorage.getItem(LANG_KEY) || "English"
   );
@@ -74,7 +74,7 @@ export function AppSidebar({
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
-        setLangHover(false);
+        setLangExpanded(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -84,6 +84,7 @@ export function AppSidebar({
   const openSettings = () => {
     setNameInput(displayName);
     setMenuOpen(false);
+    setLangExpanded(false);
     setSettingsOpen(true);
   };
 
@@ -96,6 +97,7 @@ export function AppSidebar({
 
   const handleLogout = async () => {
     setMenuOpen(false);
+    setLangExpanded(false);
     await logout();
     setLocation("/login");
   };
@@ -103,12 +105,10 @@ export function AppSidebar({
   const selectLanguage = (lang: string) => {
     setSelectedLang(lang);
     localStorage.setItem(LANG_KEY, lang);
-    setMenuOpen(false);
-    setLangHover(false);
+    setLangExpanded(false);
   };
 
-  const profileName = user ? (displayName || user.email.split("@")[0]) : null;
-  const avatarLetter = profileName?.charAt(0).toUpperCase() ?? "";
+  const avatarLetter = user?.email.charAt(0).toUpperCase() ?? "";
 
   const startResize = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -266,48 +266,36 @@ export function AppSidebar({
               }}
             >
               {/* Language */}
-              <div
-                className="relative"
-                onMouseEnter={() => setLangHover(true)}
-                onMouseLeave={() => setLangHover(false)}
+              <button
+                onClick={() => setLangExpanded(o => !o)}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
+                style={{ color: "#1c1a17" }}
               >
-                <button
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
-                  style={{ color: "#1c1a17" }}
-                >
-                  <Globe className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
-                  <span className="flex-1 text-left">Language</span>
-                  <span className="text-xs mr-1" style={{ color: "#a8a29e" }}>{selectedLang}</span>
-                  <ChevronRight className="w-3.5 h-3.5 shrink-0" style={{ color: "#a8a29e" }} />
-                </button>
-                {/* Language submenu */}
-                {langHover && (
-                  <div
-                    className="absolute rounded-xl shadow-lg py-1 z-50"
-                    style={{
-                      left: "calc(100% + 4px)",
-                      top: 0,
-                      minWidth: "140px",
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e2dd",
-                    }}
-                  >
-                    {LANGUAGES.map(lang => (
-                      <button
-                        key={lang}
-                        onClick={() => selectLanguage(lang)}
-                        className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-stone-50 flex items-center justify-between"
-                        style={{ color: "#1c1a17" }}
-                      >
-                        {lang}
-                        {selectedLang === lang && (
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#1c1a17" }} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                <Globe className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                <span className="flex-1 text-left">Language</span>
+                <span className="text-xs mr-1" style={{ color: "#a8a29e" }}>{selectedLang}</span>
+                <ChevronRight
+                  className="w-3.5 h-3.5 shrink-0 transition-transform"
+                  style={{ color: "#a8a29e", transform: langExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
+                />
+              </button>
+              {langExpanded && (
+                <div className="pb-1">
+                  {LANGUAGES.map(lang => (
+                    <button
+                      key={lang}
+                      onClick={() => selectLanguage(lang)}
+                      className="w-full flex items-center justify-between px-4 py-1.5 text-xs transition-colors hover:bg-stone-50"
+                      style={{ color: selectedLang === lang ? "#1c1a17" : "#78716c", paddingLeft: "44px" }}
+                    >
+                      {lang}
+                      {selectedLang === lang && (
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#1c1a17" }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Upgrade plan */}
               <button
@@ -347,7 +335,7 @@ export function AppSidebar({
 
           {user ? (
             <button
-              onClick={() => { setMenuOpen(o => !o); setLangHover(false); }}
+              onClick={() => { setMenuOpen(o => !o); setLangExpanded(false); }}
               data-testid="button-profile"
               className="w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-stone-100"
             >
@@ -357,8 +345,8 @@ export function AppSidebar({
               >
                 {avatarLetter || <User className="w-4 h-4" />}
               </div>
-              <p className="flex-1 text-left text-sm font-medium truncate" style={{ color: "#18181b" }}>
-                {profileName}
+              <p className="flex-1 text-left text-xs truncate" style={{ color: "#44403c" }}>
+                {user?.email}
               </p>
             </button>
           ) : (
