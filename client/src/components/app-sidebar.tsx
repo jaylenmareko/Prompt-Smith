@@ -18,8 +18,8 @@ import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
 import type { Profile } from "@shared/schema";
 
 const LANGUAGES = [
-  "English", "Spanish", "French", "German",
-  "Portuguese", "Japanese", "Chinese", "Korean",
+  "English", "Español", "Français", "Deutsch",
+  "Português", "日本語", "中文", "한국어",
 ];
 
 const LANG_KEY = "ps_language";
