@@ -111,7 +111,7 @@ export function AppSidebar({
               <TabsTrigger
                 value="saved"
                 data-testid="tab-saved-prompts"
-                className="text-xs rounded-md data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=inactive]:text-amber-500"
+                className="text-xs rounded-md data-[state=active]:bg-white data-[state=active]:text-stone-800 data-[state=inactive]:text-stone-400"
               >
                 <Bookmark className="w-3 h-3 mr-1.5" />
                 Saved
@@ -119,7 +119,7 @@ export function AppSidebar({
               <TabsTrigger
                 value="chats"
                 data-testid="tab-chats"
-                className="text-xs rounded-md data-[state=active]:bg-white data-[state=active]:text-amber-700 data-[state=inactive]:text-amber-500"
+                className="text-xs rounded-md data-[state=active]:bg-white data-[state=active]:text-stone-800 data-[state=inactive]:text-stone-400"
               >
                 <MessageSquare className="w-3 h-3 mr-1.5" />
                 Chats
@@ -132,7 +132,7 @@ export function AppSidebar({
                   {savedPrompts.length === 0 ? (
                     <div className="px-3 py-8 text-center">
                       <Bookmark className="w-5 h-5 mx-auto mb-2" style={{ color: "#e8dcc8" }} />
-                      <p className="text-xs" style={{ color: "#c4a050" }}>No saved prompts yet</p>
+                      <p className="text-xs" style={{ color: "#a8a29e" }}>No saved prompts yet</p>
                     </div>
                   ) : (
                     savedPrompts.map(prompt => (
@@ -140,14 +140,14 @@ export function AppSidebar({
                         key={prompt.id}
                         onClick={() => onSelectSavedPrompt(prompt)}
                         data-testid={`saved-prompt-${prompt.id}`}
-                        className="group w-full text-left py-2.5 px-3 rounded-lg hover:bg-amber-100 transition-colors"
+                        className="group w-full text-left py-2.5 px-3 rounded-lg hover:bg-stone-100 transition-colors"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <p className="text-xs font-medium truncate" style={{ color: "#18181b" }}>
                               {prompt.name}
                             </p>
-                            <p className="text-[10px] truncate mt-0.5" style={{ color: "#d97706" }}>
+                            <p className="text-[10px] truncate mt-0.5" style={{ color: "#1c1a17" }}>
                               {prompt.targetTool}
                             </p>
                           </div>
@@ -155,7 +155,7 @@ export function AppSidebar({
                             onClick={e => { e.stopPropagation(); onDeleteSavedPrompt(prompt.id); }}
                             className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer"
                           >
-                            <Trash2 className="w-3 h-3" style={{ color: "#c4a050" }} />
+                            <Trash2 className="w-3 h-3" style={{ color: "#a8a29e" }} />
                           </span>
                         </div>
                       </button>
@@ -171,7 +171,7 @@ export function AppSidebar({
                   {conversations.length === 0 ? (
                     <div className="px-3 py-8 text-center">
                       <MessageSquare className="w-5 h-5 mx-auto mb-2" style={{ color: "#e8dcc8" }} />
-                      <p className="text-xs" style={{ color: "#c4a050" }}>No chats yet</p>
+                      <p className="text-xs" style={{ color: "#a8a29e" }}>No chats yet</p>
                     </div>
                   ) : (
                     conversations.map(conv => (
@@ -181,13 +181,13 @@ export function AppSidebar({
                         data-testid={`conversation-${conv.id}`}
                         className="group w-full text-left py-2.5 px-3 rounded-lg transition-colors"
                         style={{
-                          backgroundColor: activeConversationId === conv.id ? "#fde68a" : "transparent",
+                          backgroundColor: activeConversationId === conv.id ? "#e5e2dd" : "transparent",
                         }}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <p
                             className="text-xs truncate flex-1"
-                            style={{ color: activeConversationId === conv.id ? "#92400e" : "#1c1a17" }}
+                            style={{ color: activeConversationId === conv.id ? "#1c1a17" : "#44403c" }}
                           >
                             {conv.title}
                           </p>
@@ -195,7 +195,7 @@ export function AppSidebar({
                             onClick={e => { e.stopPropagation(); onDeleteConversation(conv.id); }}
                             className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer"
                           >
-                            <Trash2 className="w-3 h-3" style={{ color: "#c4a050" }} />
+                            <Trash2 className="w-3 h-3" style={{ color: "#a8a29e" }} />
                           </span>
                         </div>
                       </button>
@@ -216,7 +216,7 @@ export function AppSidebar({
             <div className="flex items-center gap-3 px-2 py-2 rounded-xl">
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold"
-                style={{ backgroundColor: "#d97706", color: "#ffffff" }}
+                style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
               >
                 {avatarLetter || <User className="w-4 h-4" />}
               </div>
@@ -226,8 +226,8 @@ export function AppSidebar({
               <button
                 onClick={openSettings}
                 data-testid="button-settings"
-                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-amber-100"
-                style={{ color: "#92400e" }}
+                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-stone-100"
+                style={{ color: "#78716c" }}
                 title="Settings"
               >
                 <Settings className="w-4 h-4" />
@@ -238,14 +238,14 @@ export function AppSidebar({
               <button
                 onClick={() => setLocation("/login?mode=signup")}
                 className="w-full text-xs py-2 rounded-xl font-medium transition-colors"
-                style={{ backgroundColor: "#d97706", color: "#ffffff" }}
+                style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
               >
                 Sign up free
               </button>
               <button
                 onClick={() => setLocation("/login")}
                 className="w-full text-xs py-2 rounded-xl font-medium flex items-center justify-center gap-1.5"
-                style={{ color: "#d97706", border: "1px solid #e8dcc8" }}
+                style={{ color: "#1c1a17", border: "1px solid #e8dcc8" }}
               >
                 <LogIn className="w-3 h-3" />
                 Log in
@@ -257,7 +257,7 @@ export function AppSidebar({
         {/* Drag-to-resize handle */}
         <div
           onMouseDown={startResize}
-          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize z-10 transition-colors hover:bg-amber-300"
+          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize z-10 transition-colors hover:bg-stone-300"
           style={{ backgroundColor: "#e8dcc8" }}
         />
       </div>

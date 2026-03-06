@@ -314,7 +314,7 @@ export default function DashboardPage() {
   const inputBox = (testIdSuffix: string, disabled = false) => (
     <div
       className="flex items-end gap-2 rounded-2xl px-4 py-3"
-      style={{ backgroundColor: "#f0e8d8", border: "1px solid #e8dcc8" }}
+      style={{ backgroundColor: "#f0ece8", border: "1px solid #e5e2dd" }}
     >
       <textarea
         ref={inputRef}
@@ -325,7 +325,7 @@ export default function DashboardPage() {
         rows={1}
         disabled={disabled}
         data-testid={`input-prompt${testIdSuffix}`}
-        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-amber-300 disabled:opacity-50"
+        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-stone-300 disabled:opacity-50"
         style={{ color: "#18181b", minHeight: "24px", maxHeight: "120px" }}
         onInput={e => {
           const el = e.target as HTMLTextAreaElement;
@@ -337,7 +337,7 @@ export default function DashboardPage() {
         onClick={toggleVoice}
         data-testid={`button-mic${testIdSuffix}`}
         className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-        style={{ color: isListening ? "#d97706" : "#c4a050" }}
+        style={{ color: isListening ? "#d97706" : "#a8a29e" }}
       >
         {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </button>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
         disabled={!inputValue.trim() || isGenerating}
         data-testid={`button-send${testIdSuffix}`}
         className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-        style={{ backgroundColor: inputValue.trim() ? "#1c1a17" : "#e8dcc8", color: "#ffffff" }}
+        style={{ backgroundColor: inputValue.trim() ? "#1c1a17" : "#d6d3d1", color: "#ffffff" }}
       >
         {isGenerating && testIdSuffix === "-chat" ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -360,7 +360,7 @@ export default function DashboardPage() {
   const platformHint = (compact = false) => (
     <p
       className={`text-center ${compact ? "mt-2 text-[11px]" : "mt-3 text-xs"}`}
-      style={{ color: "#b45309" }}
+      style={{ color: "#a8a29e" }}
     >
       Choose your platform — or just mention it in your description
     </p>
@@ -376,9 +376,9 @@ export default function DashboardPage() {
           className="rounded-full text-xs font-medium transition-all"
           style={{
             padding: compact ? "4px 10px" : "6px 12px",
-            backgroundColor: selectedTool === tool ? "#d97706" : "#fef3c7",
-            color: selectedTool === tool ? "#ffffff" : "#92400e",
-            border: `1px solid ${selectedTool === tool ? "#d97706" : "#fde68a"}`,
+            backgroundColor: selectedTool === tool ? "#1c1a17" : "#f0ece8",
+            color: selectedTool === tool ? "#ffffff" : "#78716c",
+            border: `1px solid ${selectedTool === tool ? "#1c1a17" : "#e5e2dd"}`,
           }}
         >
           {tool}
@@ -390,7 +390,7 @@ export default function DashboardPage() {
   if (authLoading) {
     return (
       <div className="h-screen flex items-center justify-center" style={{ backgroundColor: "#faf8f5" }}>
-        <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#d97706" }} />
+        <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#78716c" }} />
       </div>
     );
   }
@@ -430,13 +430,13 @@ export default function DashboardPage() {
         <div className="flex flex-col flex-1 min-w-0">
           <header
             className="flex items-center gap-2 px-4 h-12 shrink-0"
-            style={{ borderBottom: "1px solid #e8dcc8", backgroundColor: "#faf8f5" }}
+            style={{ borderBottom: "1px solid #e5e2dd", backgroundColor: "#faf8f5" }}
           >
-            <SidebarTrigger className="text-amber-500" />
+            <SidebarTrigger className="text-stone-400" />
             {detectedTool && hasMessages && (
               <span
                 className="text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#fef3c7", color: "#92400e" }}
+                style={{ backgroundColor: "#f0ece8", color: "#78716c" }}
                 data-testid="badge-detected-tool"
               >
                 {detectedTool}
@@ -448,14 +448,14 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setLocation("/login")}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                  style={{ color: "#d97706" }}
+                  style={{ color: "#78716c" }}
                 >
                   Log in
                 </button>
                 <button
                   onClick={() => setLocation("/login?mode=signup")}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                  style={{ backgroundColor: "#d97706", color: "#ffffff" }}
+                  style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
                 >
                   Sign up
                 </button>
@@ -471,7 +471,7 @@ export default function DashboardPage() {
                   style={{ color: "#18181b" }}
                   data-testid="text-welcome-heading"
                 >
-                  I'll write the perfect prompt for your AI tool
+                  Create the perfect prompt for any AI tool
                 </h2>
 
                 <button
@@ -479,13 +479,13 @@ export default function DashboardPage() {
                   data-testid="button-mic-center"
                   className="w-20 h-20 rounded-full flex items-center justify-center mb-10 transition-all duration-300"
                   style={{
-                    backgroundColor: isListening ? "#d97706" : "#fef3c7",
-                    border: `2px solid ${isListening ? "#d97706" : "#fde68a"}`,
+                    backgroundColor: isListening ? "#d97706" : "#f0ece8",
+                    border: `2px solid ${isListening ? "#d97706" : "#e5e2dd"}`,
                   }}
                 >
                   {isListening
                     ? <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
-                    : <Mic className="w-8 h-8" style={{ color: "#d97706" }} />}
+                    : <Mic className="w-8 h-8" style={{ color: "#78716c" }} />}
                 </button>
 
                 <div className="w-full max-w-2xl">
@@ -503,20 +503,20 @@ export default function DashboardPage() {
                         <div
                           className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                           style={{
-                            backgroundColor: msg.role === "user" ? "#fef3c7" : "#fde68a",
-                            color: "#92400e",
+                            backgroundColor: msg.role === "user" ? "#f0ece8" : "#e5e2dd",
+                            color: "#78716c",
                           }}
                         >
                           {msg.role === "user" ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium mb-1.5" style={{ color: "#b45309" }}>
+                          <p className="text-xs font-medium mb-1.5" style={{ color: "#a8a29e" }}>
                             {msg.role === "user" ? "You" : "Prompt Smith"}
                           </p>
                           <div className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: "#18181b" }}>
                             {msg.content}
                             {msg.isStreaming && (
-                              <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#d97706" }} />
+                              <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#1c1a17" }} />
                             )}
                           </div>
                           {msg.role === "assistant" && !msg.isStreaming && msg.content && (
@@ -526,7 +526,7 @@ export default function DashboardPage() {
                                 onClick={() => copyToClipboard(msg.content)}
                                 data-testid={`button-copy-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
-                                style={{ color: "#b45309" }}
+                                style={{ color: "#a8a29e" }}
                               >
                                 <Copy className="w-3 h-3" /> Copy
                               </Button>
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                                 onClick={() => handleSave(msg)}
                                 data-testid={`button-save-${index}`}
                                 className="h-7 px-2.5 text-xs gap-1.5"
-                                style={{ color: "#b45309" }}
+                                style={{ color: "#a8a29e" }}
                               >
                                 <Bookmark className="w-3 h-3" /> Save
                               </Button>
@@ -548,7 +548,7 @@ export default function DashboardPage() {
                   </div>
                 </ScrollArea>
 
-                <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid #e8dcc8" }}>
+                <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid #e5e2dd" }}>
                   <div className="max-w-2xl mx-auto">
                     {inputBox("-chat", isGenerating)}
                     {platformHint(true)}
@@ -584,12 +584,12 @@ export default function DashboardPage() {
       {showNudge && !user && (
         <div
           className="fixed bottom-6 right-6 z-50 rounded-2xl p-4 max-w-xs shadow-lg"
-          style={{ backgroundColor: "#ffffff", border: "1px solid #fde68a" }}
+          style={{ backgroundColor: "#ffffff", border: "1px solid #e5e2dd" }}
         >
           <button
             onClick={() => setShowNudge(false)}
-            className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-amber-50"
-            style={{ color: "#c4a050" }}
+            className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-stone-100"
+            style={{ color: "#a8a29e" }}
           >
             <X className="w-3 h-3" />
           </button>
@@ -603,14 +603,14 @@ export default function DashboardPage() {
             <button
               onClick={() => setLocation("/login")}
               className="flex-1 text-xs py-1.5 rounded-lg font-medium border transition-colors"
-              style={{ color: "#d97706", borderColor: "#fde68a" }}
+              style={{ color: "#78716c", borderColor: "#e5e2dd" }}
             >
               Log in
             </button>
             <button
               onClick={() => setLocation("/login?mode=signup")}
               className="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: "#d97706", color: "#ffffff" }}
+              style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
             >
               Sign up free
             </button>
