@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   Dialog,
@@ -12,9 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Bookmark, Trash2, Settings, User, LogIn } from "lucide-react";
+import { MessageSquare, Bookmark, Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
 import type { Profile } from "@shared/schema";
+
+const LANGUAGES = [
+  "English", "Spanish", "French", "German",
+  "Portuguese", "Japanese", "Chinese", "Korean",
+];
+
+const LANG_KEY = "ps_language";
 
 const NAME_KEY = "ps_user_name";
 
@@ -46,15 +54,36 @@ export function AppSidebar({
   user,
 }: AppSidebarProps) {
   const [, setLocation] = useLocation();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState("saved");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [displayName, setDisplayName] = useState(
     () => localStorage.getItem(NAME_KEY) || ""
   );
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [langHover, setLangHover] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(
+    () => localStorage.getItem(LANG_KEY) || "English"
+  );
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+        setLangHover(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   const openSettings = () => {
     setNameInput(displayName);
+    setMenuOpen(false);
     setSettingsOpen(true);
   };
 
@@ -63,6 +92,19 @@ export function AppSidebar({
     setDisplayName(trimmed);
     localStorage.setItem(NAME_KEY, trimmed);
     setSettingsOpen(false);
+  };
+
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    await logout();
+    setLocation("/login");
+  };
+
+  const selectLanguage = (lang: string) => {
+    setSelectedLang(lang);
+    localStorage.setItem(LANG_KEY, lang);
+    setMenuOpen(false);
+    setLangHover(false);
   };
 
   const profileName = user ? (displayName || user.email.split("@")[0]) : null;
@@ -209,30 +251,116 @@ export function AppSidebar({
 
         {/* Footer */}
         <div
-          className="flex-shrink-0 px-3 pb-3 pt-2"
+          className="flex-shrink-0 px-3 pb-3 pt-2 relative"
           style={{ borderTop: "1px solid #e8dcc8" }}
+          ref={menuRef}
         >
+          {/* Profile menu popup */}
+          {user && menuOpen && (
+            <div
+              className="absolute left-3 right-3 rounded-xl shadow-lg py-1 z-50"
+              style={{
+                bottom: "calc(100% + 6px)",
+                backgroundColor: "#ffffff",
+                border: "1px solid #e5e2dd",
+              }}
+            >
+              {/* Language */}
+              <div
+                className="relative"
+                onMouseEnter={() => setLangHover(true)}
+                onMouseLeave={() => setLangHover(false)}
+              >
+                <button
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
+                  style={{ color: "#1c1a17" }}
+                >
+                  <Globe className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                  <span className="flex-1 text-left">Language</span>
+                  <span className="text-xs mr-1" style={{ color: "#a8a29e" }}>{selectedLang}</span>
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0" style={{ color: "#a8a29e" }} />
+                </button>
+                {/* Language submenu */}
+                {langHover && (
+                  <div
+                    className="absolute rounded-xl shadow-lg py-1 z-50"
+                    style={{
+                      left: "calc(100% + 4px)",
+                      top: 0,
+                      minWidth: "140px",
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e5e2dd",
+                    }}
+                  >
+                    {LANGUAGES.map(lang => (
+                      <button
+                        key={lang}
+                        onClick={() => selectLanguage(lang)}
+                        className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-stone-50 flex items-center justify-between"
+                        style={{ color: "#1c1a17" }}
+                      >
+                        {lang}
+                        {selectedLang === lang && (
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#1c1a17" }} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Upgrade plan */}
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
+                style={{ color: "#1c1a17" }}
+              >
+                <Zap className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                Upgrade plan
+              </button>
+
+              <div style={{ height: "1px", backgroundColor: "#e5e2dd", margin: "4px 12px" }} />
+
+              {/* Settings */}
+              <button
+                onClick={openSettings}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
+                style={{ color: "#1c1a17" }}
+              >
+                <Settings className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                Settings
+              </button>
+
+              <div style={{ height: "1px", backgroundColor: "#e5e2dd", margin: "4px 12px" }} />
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
+                style={{ color: "#1c1a17" }}
+              >
+                <LogOut className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                Log out
+              </button>
+            </div>
+          )}
+
           {user ? (
-            <div className="flex items-center gap-3 px-2 py-2 rounded-xl">
+            <button
+              onClick={() => { setMenuOpen(o => !o); setLangHover(false); }}
+              data-testid="button-profile"
+              className="w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-stone-100"
+            >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold"
                 style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
               >
                 {avatarLetter || <User className="w-4 h-4" />}
               </div>
-              <p className="flex-1 text-sm font-medium truncate" style={{ color: "#18181b" }}>
+              <p className="flex-1 text-left text-sm font-medium truncate" style={{ color: "#18181b" }}>
                 {profileName}
               </p>
-              <button
-                onClick={openSettings}
-                data-testid="button-settings"
-                className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-stone-100"
-                style={{ color: "#78716c" }}
-                title="Settings"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-            </div>
+            </button>
           ) : (
             <div className="flex flex-col gap-2 px-1">
               <button
