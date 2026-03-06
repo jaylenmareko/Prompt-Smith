@@ -1,0 +1,139 @@
+Build a full-stack web app called PromptForge. Here is everything you need to know.
+
+What it does
+Users speak or type a plain-language description of what they want, and the app generates an optimized AI prompt for whatever tool they are targeting. The generated prompt appears on screen and the user copies it and pastes it wherever they need it. Users can also save prompts under short names for reuse.
+
+Tech Stack
+
+Frontend: React + Vite
+Backend: Express.js
+Language: JavaScript only (no TypeScript)
+Database + Auth: Supabase (hosted Postgres + Supabase Auth)
+AI: Anthropic Claude API (model: claude-sonnet-4-6) for prompt generation
+Payments: Stripe (subscriptions)
+Voice: Browser Web Speech API (no Whisper)
+
+
+Pricing / Usage Limits
+PlanPriceLimitFree$05 prompts per dayStarter$2/month200 prompts per monthPro$5/month600 prompts per monthUnlimited$10/monthUnlimited
+
+UI Design
+The UI should look and feel as close as possible to Claude.ai or ChatGPT. Use those two apps as the primary visual reference for every design decision — layout, spacing, typography, sidebar behavior, chat bubbles, input bar, and color scheme. Dark theme, clean, minimal, no clutter. If in doubt on any design decision, ask "does this look like Claude.ai or ChatGPT?" and go with whatever answer is yes. Here are the exact specs:
+Sidebar (left):
+
+App name "PromptForge" at the top in small uppercase letters
+A tab switcher with two tabs: "Saved Prompts" and "Chats"
+Saved Prompts tab shows the user's saved prompts as clickable rows. Clicking one loads it into the input box
+Chats tab shows recent chat history
+At the bottom of the sidebar: a profile rectangle showing the user's email, their plan tier, and an avatar with their initials
+
+Main area:
+
+On first load (no messages yet): a large centered heading that reads "Tell me — what you want in your prompt, and for what app?" with a large circular mic button below it and a text input below that
+Once the user submits, the screen switches to a chat conversation format — user messages on the right, AI responses on the left, with avatars, exactly like Claude or ChatGPT
+Each AI response has a Copy button and a Save button underneath it
+The input bar stays pinned to the bottom at all times with a mic button and a send button inside it
+Below the input bar is a row of small pill badges showing the compatible apps: ChatGPT, Midjourney, Cursor, Replit, Claude, DALL·E, Sora, Gemini. These are optional pre-selectors
+After the user submits, show a small "Detected: [Tool]" badge above the input if a tool was mentioned in their text
+
+Colors:
+
+Background: #0f0f0f
+Sidebar: #161616
+Gold accent: #c8a96e
+Text: #f0ece4
+
+
+Core Features
+1. Prompt Generation
+
+User types or speaks what they want
+The backend detects which tool they mentioned (e.g. "a prompt for Midjourney") automatically
+If no tool is detected, fall back to any pill the user selected, then default to ChatGPT
+Send the input to the Claude API with a system prompt that instructs it to generate an optimized, ready-to-use prompt for that specific tool
+Each tool has its own generation instructions (Midjourney = visual descriptors, Cursor = code-focused, etc.)
+Return only the generated prompt — no preamble, no explanation
+
+2. Voice Input
+
+Use the browser's built-in Web Speech API
+Mic button in the center on first load, and a smaller mic button inside the input bar during chat
+Transcript appends to the text input box
+Works in Chrome
+
+3. Auth
+
+Supabase Auth (email + password)
+Login and signup on the same page, toggle between them
+After signup, create a profile row in the database
+Protect the dashboard — redirect to login if not signed in
+
+4. Usage Limits
+
+Track prompts used per day (free) and per month (paid) in the database
+Block generation and show an upgrade banner when the limit is hit
+Reset daily counts at midnight, monthly counts at the start of each month
+
+5. Saved Prompts
+
+After generation, user can click Save and give the prompt a short name
+Saved prompts appear in the sidebar and are clickable to reload into the input
+Stored in Supabase
+
+6. Stripe Payments
+
+Checkout flow for Starter ($2), Pro ($5), Unlimited ($10)
+Webhook updates the user's plan in the database on successful payment or cancellation
+Billing portal for managing subscription
+
+
+Database Tables (Supabase)
+profiles
+
+id (UUID, references auth.users)
+email
+plan (free / starter / pro / unlimited)
+prompts_used_today (integer)
+prompts_used_month (integer)
+last_reset_date (text, YYYY-MM-DD)
+last_monthly_reset (text, YYYY-MM)
+stripe_customer_id
+stripe_subscription_id
+
+saved_prompts
+
+id (UUID)
+user_id (references profiles)
+name
+prompt_text
+target_tool
+user_input
+created_at
+
+Also create a Postgres function called increment_prompt_usage(user_id UUID) that increments both prompts_used_today and prompts_used_month atomically.
+Enable Row Level Security on both tables so users can only access their own data.
+
+Environment Variables needed
+Client:
+
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+
+Server:
+
+PORT
+ANTHROPIC_API_KEY
+SUPABASE_URL
+SUPABASE_SERVICE_KEY
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_PRICE_STARTER
+STRIPE_PRICE_PRO
+STRIPE_PRICE_UNLIMITED
+
+
+Pages
+
+/login — login and signup
+/dashboard — the main app (protected)
+/pricing — pricing page with all four plans
