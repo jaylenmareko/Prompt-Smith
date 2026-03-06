@@ -471,7 +471,7 @@ export default function DashboardPage() {
                   style={{ color: "#18181b" }}
                   data-testid="text-welcome-heading"
                 >
-                  Tell me what you want in your prompt — and choose for what app?
+                  I'll write the perfect prompt for your AI tool
                 </h2>
 
                 <button
