@@ -4,16 +4,21 @@ import { storage } from "./storage";
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import passport from "passport";
 import Anthropic from "@anthropic-ai/sdk";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import crypto from "crypto";
 
-function getMailer() {
-  if (!process.env.SMTP_HOST) return null;
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+async function sendResetEmail(to: string, resetUrl: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.log(`[Password Reset] No RESEND_API_KEY set. Reset URL: ${resetUrl}`);
+    return;
+  }
+  const resend = new Resend(apiKey);
+  await resend.emails.send({
+    from: process.env.RESEND_FROM || "Prompt Smith <onboarding@resend.dev>",
+    to,
+    subject: "Reset your Prompt Smith password",
+    html: `<p>Click below to reset your password. This link expires in 1 hour.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
   });
 }
 
@@ -163,17 +168,7 @@ export async function registerRoutes(
       await storage.setResetToken(email, token, expiry);
       const appUrl = process.env.APP_URL || "http://localhost:5000";
       const resetUrl = `${appUrl}/reset-password?token=${token}`;
-      const mailer = getMailer();
-      if (mailer) {
-        await mailer.sendMail({
-          from: process.env.SMTP_FROM || process.env.SMTP_USER,
-          to: email,
-          subject: "Reset your Prompt Smith password",
-          html: `<p>Click the link below to reset your password. It expires in 1 hour.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
-        });
-      } else {
-        console.log(`[Password Reset] No SMTP configured. Reset URL: ${resetUrl}`);
-      }
+      await sendResetEmail(email, resetUrl);
       res.json({ message: "If that email exists, a reset link has been sent." });
     } catch (error: any) {
       res.status(500).json({ message: "Failed to send reset email" });

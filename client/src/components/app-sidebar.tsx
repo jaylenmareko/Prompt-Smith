@@ -205,6 +205,23 @@ export function AppSidebar({
   const avatarLetter = user?.email.charAt(0).toUpperCase() ?? "";
   const planLabel = user ? (PLAN_LABELS[user.plan] ?? user.plan) : "";
 
+  const remainingLabel = (() => {
+    if (!user) return null;
+    const today = new Date().toISOString().split("T")[0];
+    const thisMonth = new Date().toISOString().substring(0, 7);
+    if (user.plan === "free") {
+      const used = user.lastResetDate === today ? user.promptsUsedToday : 0;
+      const left = Math.max(0, 5 - used);
+      return `${left} of 5 left today`;
+    }
+    if (user.plan === "starter") {
+      const used = user.lastMonthlyReset === thisMonth ? user.promptsUsedMonth : 0;
+      const left = Math.max(0, 500 - used);
+      return `${left} of 500 left`;
+    }
+    return null;
+  })();
+
   const BG     = "hsl(var(--background))";
   const CARD   = "hsl(var(--card))";
   const FG     = "hsl(var(--foreground))";
@@ -466,7 +483,9 @@ export function AppSidebar({
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-xs truncate" style={{ color: FG }}>{user?.email}</p>
-                <p className="text-[10px] truncate" style={{ color: MUTFG }}>{planLabel}</p>
+                <p className="text-[10px] truncate" style={{ color: MUTFG }}>
+                  {planLabel}{remainingLabel ? ` · ${remainingLabel}` : ""}
+                </p>
               </div>
             </button>
           ) : (
