@@ -26,33 +26,46 @@ function detectTool(input: string): string | null {
   return null;
 }
 
+// Target word counts per tool — shorter prompts perform better in practice
+const TOOL_LENGTH: Record<string, string> = {
+  "Midjourney": "Keep it under 60 words. Use comma-separated descriptors, not sentences.",
+  "DALL·E":     "Keep it under 80 words. Dense visual descriptors, no filler.",
+  "Sora":       "Keep it under 100 words. Scene, movement, mood — no narration.",
+  "ChatGPT":    "Keep it under 200 words. Clear and focused.",
+  "Claude":     "Keep it under 200 words. Clear and focused.",
+  "Gemini":     "Keep it under 200 words. Clear and focused.",
+  "Cursor":     "Keep it under 300 words. Technical detail only — no fluff.",
+  "Replit":     "Keep it under 300 words. Technical detail only — no fluff.",
+};
+
 function getSystemPrompt(targetTool: string): string {
   const toolInstructions: Record<string, string> = {
-    "ChatGPT": "Structure the prompt with clear instructions, context, constraints, and desired output format. Use role-based prompting when appropriate.",
-    "Midjourney": "Include detailed visual descriptors, artistic style references, composition details, lighting, mood, color palette, and Midjourney-specific parameters like --ar, --v, --style, --q.",
-    "Cursor": "Focus on clear code specifications, programming language, framework requirements, file structure, implementation details, and edge cases to handle.",
-    "Replit": "Focus on practical full-stack implementation, framework choices, database design, API structure, and deployment considerations.",
-    "Claude": "Emphasize structured reasoning, step-by-step analysis, clear constraints, and XML tags for organization when helpful.",
-    "DALL·E": "Include detailed visual descriptions, artistic style, composition, mood, lighting, perspective, and DALL·E-specific formatting.",
-    "Sora": "Include cinematic descriptions, camera movements, scene transitions, timing, visual storytelling elements, and video-specific parameters.",
-    "Gemini": "Structure with clear objectives, context, multi-modal considerations, and leverage Gemini's strengths in reasoning and analysis.",
+    "ChatGPT":    "Use a clear role, task, and output format. Be direct.",
+    "Midjourney": "Comma-separated visual descriptors: subject, style, lighting, mood, color palette, camera angle. End with Midjourney parameters (--ar, --v, --style).",
+    "Cursor":     "Specify language, framework, exact behavior, file structure, and edge cases. Be precise.",
+    "Replit":     "Specify stack, features, API design, and database needs. Be precise.",
+    "Claude":     "State the task clearly with constraints and desired output format. Use step-by-step framing if needed.",
+    "DALL·E":     "Comma-separated visual descriptors: subject, art style, lighting, composition, mood, color palette.",
+    "Sora":       "Describe the scene, camera movement, pacing, and mood. Cinematic language only.",
+    "Gemini":     "State the task, context, and desired output clearly.",
   };
 
   const specific = toolInstructions[targetTool] || toolInstructions["ChatGPT"];
+  const lengthRule = TOOL_LENGTH[targetTool] || "Keep it under 200 words.";
 
-  return `You are Prompt Smith, an expert AI prompt engineer. Your sole job is to take a user's plain-language description and generate an optimized, ready-to-use prompt for ${targetTool}.
+  return `You are Prompt Smith, an expert AI prompt engineer. Your job is to take a user's plain-language description and generate a concise, optimized prompt for ${targetTool}.
 
 CRITICAL RULES:
-- Return ONLY the generated prompt text — nothing else
+- Return ONLY the prompt text — nothing else
 - No preamble, no explanation, no "Here's your prompt:" prefix
 - No markdown formatting or code blocks
-- The output should be directly copy-pasteable into ${targetTool}
-- Make the prompt comprehensive, specific, and optimized for best results
+- The output must be directly copy-pasteable into ${targetTool}
+- LENGTH: ${lengthRule} Shorter, focused prompts outperform long ones.
 
-TOOL-SPECIFIC INSTRUCTIONS for ${targetTool}:
+TOOL-SPECIFIC FORMAT for ${targetTool}:
 ${specific}
 
-Generate the most effective prompt possible based on what the user describes.`;
+Write the most effective prompt possible. Prioritize clarity and specificity over length.`;
 }
 
 export async function registerRoutes(
