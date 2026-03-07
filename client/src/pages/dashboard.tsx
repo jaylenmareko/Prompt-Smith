@@ -571,7 +571,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Bubble */}
-                        <div className={`max-w-[75%] min-w-0 ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
+                        <div className={`max-w-[75%] min-w-0 flex flex-col ${msg.role === "user" ? "items-end ml-auto" : "items-start mr-auto"}`}>
                           <div
                             className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words"
                             style={msg.role === "user"
