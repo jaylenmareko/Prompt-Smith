@@ -491,7 +491,7 @@ export default function DashboardPage() {
 
           <main className="flex-1 flex flex-col overflow-hidden">
             {!hasMessages ? (
-              <div className="flex-1 flex flex-col items-center justify-center px-6">
+              <div className="flex-1 flex flex-col items-center justify-center px-6 relative">
                 <h2
                   className="text-2xl md:text-3xl font-light text-center mb-10 leading-relaxed max-w-xl"
                   style={{ color: "hsl(var(--foreground))" }}
@@ -547,6 +547,16 @@ export default function DashboardPage() {
                   {inputBox("")}
                   {platformHint()}
                   {toolPills("welcome")}
+                </div>
+
+                {/* Powered by Claude — bottom-left of landing page */}
+                <div className="absolute bottom-4 left-4 flex items-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "hsl(var(--muted-foreground))" }} />
+                  </svg>
+                  <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    Powered by <span className="font-medium">Claude</span>
+                  </span>
                 </div>
               </div>
             ) : (
