@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Copy, Bookmark, Loader2, MicOff, Sparkles, User, X } from "lucide-react";
+import { Mic, Send, Copy, Bookmark, Loader2, Sparkles, User, X } from "lucide-react";
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
@@ -55,8 +55,6 @@ export default function DashboardPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [detectedTool, setDetectedTool] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const isMutedRef = useRef(false);
   const committedRef = useRef("");
   const [conversations, setConversations] = useState<LocalConversation[]>(getStoredConversations);
   const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(getStoredSavedPrompts);
@@ -298,8 +296,6 @@ export default function DashboardPage() {
   const stopVoice = () => {
     recognitionRef.current?.stop();
     setIsListening(false);
-    setIsMuted(false);
-    isMutedRef.current = false;
   };
 
   const toggleVoice = () => {
@@ -321,7 +317,6 @@ export default function DashboardPage() {
     recognition.interimResults = true;
     recognition.lang = "en-US";
     recognition.onresult = (event: any) => {
-      if (isMutedRef.current) return;
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
@@ -334,21 +329,13 @@ export default function DashboardPage() {
       // Replace entire input value: committed finals + current interim preview
       setInputValue(committedRef.current + (interim ? (committedRef.current ? " " : "") + interim : ""));
     };
-    recognition.onerror = () => { setIsListening(false); setIsMuted(false); isMutedRef.current = false; };
-    recognition.onend = () => { setIsListening(false); setIsMuted(false); isMutedRef.current = false; };
+    recognition.onerror = () => { setIsListening(false); };
+    recognition.onend = () => { setIsListening(false); };
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-    setIsMuted(false);
-    isMutedRef.current = false;
   };
 
-  const toggleMute = () => {
-    if (!isListening) return;
-    const next = !isMuted;
-    setIsMuted(next);
-    isMutedRef.current = next;
-  };
 
   const hasMessages = messages.length > 0;
 
@@ -369,16 +356,6 @@ export default function DashboardPage() {
         className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-stone-300 disabled:opacity-50"
         style={{ color: "#18181b", minHeight: "24px", maxHeight: "320px" }}
       />
-      <button
-        onClick={toggleMute}
-        data-testid={`button-mic${testIdSuffix}`}
-        disabled={!isListening}
-        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors disabled:opacity-30"
-        style={{ color: isMuted ? "#ef4444" : isListening ? "#1DB954" : "#a8a29e" }}
-        title={isListening ? (isMuted ? "Unmute" : "Mute") : "Start mic from the button below"}
-      >
-        {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-      </button>
       <button
         onClick={handleGenerate}
         disabled={!inputValue.trim() || isGenerating}
