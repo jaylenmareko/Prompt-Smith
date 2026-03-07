@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, Menu } from "lucide-react";
+import { Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, Plus, Search } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
 import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
@@ -58,6 +58,7 @@ export function AppSidebar({
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [langExpanded, setLangExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedLang, setSelectedLang] = useState(
     () => localStorage.getItem(LANG_KEY) || "English"
   );
@@ -124,15 +125,30 @@ export function AppSidebar({
           <SidebarTrigger className="w-8 h-8 text-stone-400 hover:bg-stone-100 rounded-lg" />
         </div>
 
-        {/* New chat text button */}
-        <div className="px-3 pt-1 pb-2 flex-shrink-0">
+        {/* New chat + Search */}
+        <div className="px-3 pt-1 pb-2 flex-shrink-0 space-y-1">
           <button
             onClick={onNewChat}
-            className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-stone-100"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-stone-100"
             style={{ color: "#44403c" }}
           >
+            <Plus className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
             New chat
           </button>
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg"
+            style={{ backgroundColor: "#f5f5f4" }}
+          >
+            <Search className="w-4 h-4 shrink-0" style={{ color: "#a8a29e" }} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search chats"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
+              style={{ color: "#18181b" }}
+            />
+          </div>
         </div>
 
         {/* Content */}
@@ -182,12 +198,17 @@ export function AppSidebar({
               <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
                 Chats
               </p>
-              {conversations.length === 0 ? (
-                <div className="px-3 py-4 text-center">
-                  <p className="text-xs" style={{ color: "#a8a29e" }}>No chats yet</p>
-                </div>
-              ) : (
-                conversations.map(conv => (
+              {(() => {
+                const filtered = searchQuery.trim()
+                  ? conversations.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                  : conversations;
+                return filtered.length === 0 ? (
+                  <div className="px-3 py-4 text-center">
+                    <p className="text-xs" style={{ color: "#a8a29e" }}>
+                      {searchQuery ? "No matching chats" : "No chats yet"}
+                    </p>
+                  </div>
+                ) : filtered.map(conv => (
                   <button
                     key={conv.id}
                     onClick={() => onSelectConversation(conv.id)}
@@ -212,8 +233,8 @@ export function AppSidebar({
                       </span>
                     </div>
                   </button>
-                ))
-              )}
+                ));
+              })()}
             </div>
 
           </div>
