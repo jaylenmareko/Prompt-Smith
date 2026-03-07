@@ -524,9 +524,26 @@ export default function DashboardPage() {
                               : { backgroundColor: "#f0ece8", color: "#18181b", borderBottomLeftRadius: "4px" }
                             }
                           >
-                            {msg.content}
-                            {msg.isStreaming && (
-                              <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#78716c" }} />
+                            {msg.isStreaming && !msg.content ? (
+                              <span className="flex items-center gap-1.5 py-0.5">
+                                <span className="text-xs" style={{ color: "#78716c" }}>Crafting your prompt</span>
+                                <span className="flex gap-1">
+                                  {[0, 1, 2].map(i => (
+                                    <span
+                                      key={i}
+                                      className="inline-block w-1.5 h-1.5 rounded-full animate-bounce"
+                                      style={{ backgroundColor: "#a8a29e", animationDelay: `${i * 0.15}s` }}
+                                    />
+                                  ))}
+                                </span>
+                              </span>
+                            ) : (
+                              <>
+                                {msg.content}
+                                {msg.isStreaming && (
+                                  <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#78716c" }} />
+                                )}
+                              </>
                             )}
                           </div>
                           {msg.role === "assistant" && !msg.isStreaming && msg.content && (
