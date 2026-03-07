@@ -520,9 +520,7 @@ export default function DashboardPage() {
                         : "0 2px 8px rgba(0,0,0,0.12)",
                     }}
                   >
-                    {isListening
-                      ? <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
-                      : <Mic className="w-8 h-8" style={{ color: "#ffffff" }} />}
+                    <Mic className="w-8 h-8" style={{ color: "#ffffff" }} />
                   </button>
                 </div>
 
