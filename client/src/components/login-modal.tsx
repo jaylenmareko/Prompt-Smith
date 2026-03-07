@@ -12,15 +12,39 @@ interface LoginModalProps {
 
 export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginModalProps) {
   const [isSignup, setIsSignup] = useState(defaultMode === "signup");
+  const [isForgot, setIsForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
       setIsSignup(defaultMode === "signup");
+      setIsForgot(false);
+      setForgotSent(false);
+      setForgotEmail("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
     }
   }, [open, defaultMode]);
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      setForgotSent(true);
+    } catch {
+      setForgotSent(true); // show success regardless to avoid email enumeration
+    } finally {
+      setForgotLoading(false);
+    }
+  };
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -93,11 +117,57 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
               Prompt Smith
             </p>
             <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-              {isSignup ? "Create your account" : "Welcome back"}
+              {isForgot ? "Reset your password" : isSignup ? "Create your account" : "Welcome back"}
             </p>
           </div>
 
-          {/* Form */}
+          {/* Forgot password view */}
+          {isForgot ? (
+            forgotSent ? (
+              <div className="text-center space-y-4">
+                <p className="text-sm" style={{ color: "hsl(var(--foreground))" }}>
+                  If that email is registered, a reset link is on its way. Check your inbox.
+                </p>
+                <button
+                  onClick={() => { setIsForgot(false); setForgotSent(false); }}
+                  className="text-sm underline underline-offset-2"
+                  style={{ color: "hsl(var(--muted-foreground))" }}
+                >
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgot} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  style={{ width: "100%", height: "44px", borderRadius: "8px", border: "none", backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))", fontSize: "14px", fontWeight: 500, cursor: forgotLoading ? "not-allowed" : "pointer", opacity: forgotLoading ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send reset link"}
+                </button>
+                <p className="text-center text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  <button type="button" onClick={() => setIsForgot(false)} className="underline underline-offset-2 hover:opacity-70">
+                    Back to sign in
+                  </button>
+                </p>
+              </form>
+            )
+          ) : (
+
+          /* Form */
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
@@ -178,18 +248,34 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
             </button>
           </form>
 
+          {!isSignup && (
+            <p className="text-center mt-3 text-sm">
+              <button
+                onClick={() => setIsForgot(true)}
+                className="transition-opacity hover:opacity-70"
+                style={{ color: "hsl(var(--muted-foreground))" }}
+              >
+                Forgot password?
+              </button>
+            </p>
+          )}
+          </form>
+          )}
+
           {/* Toggle */}
-          <p className="text-center mt-6 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button
-              onClick={() => switchMode(!isSignup)}
-              data-testid="button-toggle-auth-mode"
-              className="font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
-              style={{ color: "hsl(var(--foreground))" }}
-            >
-              {isSignup ? "Sign in" : "Sign up"}
-            </button>
-          </p>
+          {!isForgot && (
+            <p className="text-center mt-6 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+              {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+              <button
+                onClick={() => switchMode(!isSignup)}
+                data-testid="button-toggle-auth-mode"
+                className="font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+                style={{ color: "hsl(var(--foreground))" }}
+              >
+                {isSignup ? "Sign in" : "Sign up"}
+              </button>
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

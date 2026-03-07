@@ -8,6 +8,7 @@ import {
   Trash2, Settings, User, LogIn, LogOut, ChevronRight,
   Zap, Plus, Search, Bookmark, MessageSquare, Sun, Moon, Check,
 } from "lucide-react";
+import { isToday, isYesterday, isWithinInterval, subDays } from "date-fns";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
@@ -349,13 +350,22 @@ export function AppSidebar({
                 const filtered = searchQuery.trim()
                   ? conversations.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
                   : conversations;
-                return filtered.length === 0 ? (
+                if (filtered.length === 0) return (
                   <div className="px-3 py-4 text-center">
                     <p className="text-xs" style={{ color: MUTFG }}>
                       {searchQuery ? t.noMatchingChats : t.noChatsYet}
                     </p>
                   </div>
-                ) : filtered.map(conv => (
+                );
+                const now = new Date();
+                const groups = [
+                  { label: "Today",        items: filtered.filter(c => isToday(new Date(c.createdAt))) },
+                  { label: "Yesterday",    items: filtered.filter(c => isYesterday(new Date(c.createdAt))) },
+                  { label: "Last 7 days",  items: filtered.filter(c => { const d = new Date(c.createdAt); return !isToday(d) && !isYesterday(d) && isWithinInterval(d, { start: subDays(now, 7), end: now }); }) },
+                  { label: "Older",        items: filtered.filter(c => new Date(c.createdAt) < subDays(now, 7)) },
+                ].filter(g => g.items.length > 0);
+
+                const ConvButton = ({ conv }: { conv: typeof filtered[0] }) => (
                   <button
                     key={conv.id}
                     onClick={() => onSelectConversation(conv.id)}
@@ -375,6 +385,15 @@ export function AppSidebar({
                       </span>
                     </div>
                   </button>
+                );
+
+                return groups.map(group => (
+                  <div key={group.label}>
+                    <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: MUTFG }}>
+                      {group.label}
+                    </p>
+                    {group.items.map(conv => <ConvButton key={conv.id} conv={conv} />)}
+                  </div>
                 ));
               })()}
             </div>
@@ -406,7 +425,7 @@ export function AppSidebar({
               <div style={{ height: "1px", backgroundColor: BORDER, margin: "4px 12px" }} />
 
               <button
-                onClick={() => setMenuOpen(false)}
+                onClick={() => { setMenuOpen(false); setLocation("/pricing"); }}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors"
                 style={{ color: FG }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = SEC)}

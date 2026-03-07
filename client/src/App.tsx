@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { LanguageProvider } from "@/lib/language-context";
 import DashboardPage from "@/pages/dashboard";
 import PricingPage from "@/pages/pricing";
+import ResetPasswordPage from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={DashboardPage} />
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/pricing" component={PricingPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <Route component={NotFound} />
     </Switch>
   );

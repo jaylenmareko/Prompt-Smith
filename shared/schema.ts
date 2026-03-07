@@ -14,6 +14,8 @@ export const profiles = pgTable("profiles", {
   lastMonthlyReset: text("last_monthly_reset"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpiry: text("password_reset_expiry"),
 });
 
 export const conversations = pgTable("conversations", {

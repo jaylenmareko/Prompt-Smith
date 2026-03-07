@@ -79,6 +79,7 @@ export default function DashboardPage() {
   const shouldListenRef = useRef(false);
   const [conversations, setConversations] = useState<LocalConversation[]>(getStoredConversations);
   const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(getStoredSavedPrompts);
+  const [guestUsage, setGuestUsage] = useState<{ used: number; limit: number } | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [saveTarget, setSaveTarget] = useState<{ promptText: string; targetTool: string; userInput: string } | null>(null);
@@ -102,6 +103,16 @@ export default function DashboardPage() {
     el.style.height = Math.min(el.scrollHeight, 320) + "px";
   }, [inputValue]);
 
+
+  const fetchGuestUsage = useCallback(async () => {
+    if (user) return;
+    try {
+      const res = await fetch("/api/usage");
+      if (res.ok) setGuestUsage(await res.json());
+    } catch {}
+  }, [user]);
+
+  useEffect(() => { fetchGuestUsage(); }, [fetchGuestUsage]);
 
   // Show login nudge after 3 seconds if not logged in
   useEffect(() => {
@@ -222,6 +233,7 @@ export default function DashboardPage() {
           content: wallText,
           isGuest,
         }]);
+        fetchGuestUsage();
         return;
       }
 
@@ -279,6 +291,7 @@ export default function DashboardPage() {
       ];
       persistConversation(convId, title, finalMessages);
       if (user) queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      else fetchGuestUsage();
 
 
     } catch (error: any) {
@@ -427,19 +440,22 @@ export default function DashboardPage() {
   );
 
   const usageWarning = () => {
-    if (!user) return null;
-    const today = new Date().toISOString().split("T")[0];
-    const thisMonth = new Date().toISOString().substring(0, 7);
-    const dailyUsed = user.lastResetDate === today ? user.promptsUsedToday : 0;
-    const monthlyUsed = user.lastMonthlyReset === thisMonth ? user.promptsUsedMonth : 0;
-
     let text: string | null = null;
-    if (user.plan === "free" && dailyUsed >= 3) {
-      const remaining = Math.max(0, 5 - dailyUsed);
+    if (!user && guestUsage && guestUsage.used >= 3) {
+      const remaining = Math.max(0, guestUsage.limit - guestUsage.used);
       text = remaining === 0 ? "No prompts left today" : `${remaining} prompt${remaining === 1 ? "" : "s"} left today`;
-    } else if (user.plan === "starter" && monthlyUsed >= 450) {
-      const remaining = Math.max(0, 500 - monthlyUsed);
-      text = remaining === 0 ? "No prompts left this month" : `${remaining} prompt${remaining === 1 ? "" : "s"} left this month`;
+    } else if (user) {
+      const today = new Date().toISOString().split("T")[0];
+      const thisMonth = new Date().toISOString().substring(0, 7);
+      const dailyUsed = user.lastResetDate === today ? user.promptsUsedToday : 0;
+      const monthlyUsed = user.lastMonthlyReset === thisMonth ? user.promptsUsedMonth : 0;
+      if (user.plan === "free" && dailyUsed >= 3) {
+        const remaining = Math.max(0, 5 - dailyUsed);
+        text = remaining === 0 ? "No prompts left today" : `${remaining} prompt${remaining === 1 ? "" : "s"} left today`;
+      } else if (user.plan === "starter" && monthlyUsed >= 450) {
+        const remaining = Math.max(0, 500 - monthlyUsed);
+        text = remaining === 0 ? "No prompts left this month" : `${remaining} prompt${remaining === 1 ? "" : "s"} left this month`;
+      }
     }
     if (!text) return null;
     return (

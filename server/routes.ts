@@ -4,6 +4,18 @@ import { storage } from "./storage";
 import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import passport from "passport";
 import Anthropic from "@anthropic-ai/sdk";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
+
+function getMailer() {
+  if (!process.env.SMTP_HOST) return null;
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  });
+}
 
 const TOOL_KEYWORDS: Record<string, string[]> = {
   "ChatGPT": ["chatgpt", "chat gpt", "openai"],
@@ -137,6 +149,60 @@ export async function registerRoutes(
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to update password" });
     }
+  });
+
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+    try {
+      const profile = await storage.getProfileByEmail(email);
+      // Always return success to avoid exposing which emails exist
+      if (!profile) return res.json({ message: "If that email exists, a reset link has been sent." });
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiry = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+      await storage.setResetToken(email, token, expiry);
+      const appUrl = process.env.APP_URL || "http://localhost:5000";
+      const resetUrl = `${appUrl}/reset-password?token=${token}`;
+      const mailer = getMailer();
+      if (mailer) {
+        await mailer.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: email,
+          subject: "Reset your Prompt Smith password",
+          html: `<p>Click the link below to reset your password. It expires in 1 hour.</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+        });
+      } else {
+        console.log(`[Password Reset] No SMTP configured. Reset URL: ${resetUrl}`);
+      }
+      res.json({ message: "If that email exists, a reset link has been sent." });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to send reset email" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) return res.status(400).json({ message: "Token and new password are required" });
+    if (newPassword.length < 6) return res.status(400).json({ message: "Password must be at least 6 characters" });
+    try {
+      const profile = await storage.getProfileByResetToken(token);
+      if (!profile || !profile.passwordResetExpiry) return res.status(400).json({ message: "Invalid or expired reset link" });
+      if (new Date() > new Date(profile.passwordResetExpiry)) return res.status(400).json({ message: "Reset link has expired" });
+      const hashed = await hashPassword(newPassword);
+      await storage.updateProfile(profile.id, { password: hashed });
+      await storage.clearResetToken(profile.id);
+      res.json({ message: "Password reset successfully" });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  app.get("/api/usage", (req, res) => {
+    const sess = req.session as any;
+    if (req.isAuthenticated()) return res.json(null); // logged-in users read from their profile
+    const today = new Date().toISOString().split("T")[0];
+    const used = sess.guestLastReset === today ? (sess.guestPromptsToday || 0) : 0;
+    res.json({ used, limit: 5 });
   });
 
   app.delete("/api/auth/account", async (req, res) => {

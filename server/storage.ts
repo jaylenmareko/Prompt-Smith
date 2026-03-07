@@ -15,6 +15,9 @@ export interface IStorage {
   createProfile(email: string, hashedPassword: string): Promise<Profile>;
   updateProfile(id: number, data: Partial<Profile>): Promise<Profile>;
   checkAndIncrementUsage(id: number): Promise<{ allowed: boolean; reason?: "daily" | "monthly"; plan: string }>;
+  setResetToken(email: string, token: string, expiry: string): Promise<void>;
+  getProfileByResetToken(token: string): Promise<Profile | undefined>;
+  clearResetToken(id: number): Promise<void>;
   incrementPromptUsage(id: number): Promise<void>;
   resetDailyUsage(id: number): Promise<void>;
   resetMonthlyUsage(id: number): Promise<void>;
@@ -178,6 +181,19 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSavedPrompt(id: number): Promise<void> {
     await db.delete(savedPrompts).where(eq(savedPrompts.id, id));
+  }
+
+  async setResetToken(email: string, token: string, expiry: string): Promise<void> {
+    await db.update(profiles).set({ passwordResetToken: token, passwordResetExpiry: expiry }).where(eq(profiles.email, email));
+  }
+
+  async getProfileByResetToken(token: string): Promise<Profile | undefined> {
+    const [profile] = await db.select().from(profiles).where(eq(profiles.passwordResetToken, token));
+    return profile;
+  }
+
+  async clearResetToken(id: number): Promise<void> {
+    await db.update(profiles).set({ passwordResetToken: null, passwordResetExpiry: null }).where(eq(profiles.id, id));
   }
 
   async deleteProfile(id: number): Promise<void> {
