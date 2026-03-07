@@ -60,6 +60,7 @@ export function AppSidebar({
   const [langExpanded, setLangExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchPrompts, setSearchPrompts] = useState("");
+  const [savedOpen, setSavedOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState(
     () => localStorage.getItem(LANG_KEY) || "English"
   );
@@ -172,17 +173,26 @@ export function AppSidebar({
 
             {/* Saved Prompts section */}
             <div className="mt-3">
-              <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
-                Saved
-              </p>
-              {(() => {
+              <button
+                onClick={() => setSavedOpen(o => !o)}
+                className="w-full flex items-center justify-between px-3 py-1 rounded-lg hover:bg-stone-100 transition-colors group"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
+                  Saved
+                </span>
+                <ChevronRight
+                  className="w-3.5 h-3.5 transition-transform"
+                  style={{ color: "#a8a29e", transform: savedOpen ? "rotate(90deg)" : "rotate(0deg)" }}
+                />
+              </button>
+              {savedOpen && (() => {
                 const filtered = searchPrompts.trim()
                   ? savedPrompts.filter(p =>
                       p.name.toLowerCase().includes(searchPrompts.toLowerCase()) ||
                       p.targetTool.toLowerCase().includes(searchPrompts.toLowerCase()))
                   : savedPrompts;
                 return filtered.length === 0 ? (
-                  <div className="px-3 py-4 text-center">
+                  <div className="px-3 py-3 text-center">
                     <p className="text-xs" style={{ color: "#a8a29e" }}>
                       {searchPrompts ? "No matching prompts" : "No saved prompts yet"}
                     </p>
