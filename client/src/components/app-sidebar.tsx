@@ -179,7 +179,7 @@ export function AppSidebar({
                 style={{ color: "#44403c" }}
               >
                 <Bookmark className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
-                <span className="flex-1 text-left">Saved</span>
+                <span className="flex-1 text-left">Saved Prompts</span>
                 <ChevronRight
                   className="w-4 h-4 shrink-0 transition-transform"
                   style={{ color: "#a8a29e", transform: savedOpen ? "rotate(90deg)" : "rotate(0deg)" }}
