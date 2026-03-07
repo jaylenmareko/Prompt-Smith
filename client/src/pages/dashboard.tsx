@@ -83,12 +83,6 @@ export default function DashboardPage() {
     el.style.height = Math.min(el.scrollHeight, 320) + "px";
   }, [inputValue]);
 
-  // Once auth resolves: open sidebar for guests, keep closed for logged-in users
-  useEffect(() => {
-    if (!authLoading) {
-      setSidebarOpen(!user);
-    }
-  }, [authLoading, user]);
 
   // Show login nudge after 3 seconds if not logged in
   useEffect(() => {
