@@ -108,6 +108,14 @@ export function AppSidebar({
 
   const avatarLetter = user?.email.charAt(0).toUpperCase() ?? "";
 
+  const PLAN_LABELS: Record<string, string> = {
+    free: "Free",
+    starter: "Starter",
+    pro: "Pro",
+    max: "Max",
+  };
+  const planLabel = user ? (PLAN_LABELS[user.plan] ?? user.plan) : "";
+
   return (
     <>
       {/* Plain div — no shadcn Sidebar so it doesn't inject spacers into the flex layout */}
@@ -370,9 +378,10 @@ export function AppSidebar({
               >
                 {avatarLetter || <User className="w-4 h-4" />}
               </div>
-              <p className="flex-1 text-left text-xs truncate" style={{ color: "#44403c" }}>
-                {user?.email}
-              </p>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-xs truncate" style={{ color: "#44403c" }}>{user?.email}</p>
+                <p className="text-[10px] truncate" style={{ color: "#a8a29e" }}>{planLabel}</p>
+              </div>
             </button>
           ) : (
             <div className="flex flex-col gap-2 px-1">
