@@ -67,6 +67,14 @@ export default function DashboardPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
 
+  // Auto-resize textarea whenever inputValue changes (covers voice input too)
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 320) + "px";
+  }, [inputValue]);
+
   // Once auth resolves: open sidebar for guests, keep closed for logged-in users
   useEffect(() => {
     if (!authLoading) {
@@ -344,12 +352,7 @@ export default function DashboardPage() {
         disabled={disabled}
         data-testid={`input-prompt${testIdSuffix}`}
         className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-stone-300 disabled:opacity-50"
-        style={{ color: "#18181b", minHeight: "24px", maxHeight: "120px" }}
-        onInput={e => {
-          const el = e.target as HTMLTextAreaElement;
-          el.style.height = "auto";
-          el.style.height = Math.min(el.scrollHeight, 120) + "px";
-        }}
+        style={{ color: "#18181b", minHeight: "24px", maxHeight: "320px" }}
       />
       <button
         onClick={toggleMute}
