@@ -16,6 +16,13 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { login, register } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -26,42 +33,12 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      setIsSubmitting(false);
     }
   }, [open, defaultMode]);
 
-  const handleForgot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setForgotLoading(true);
-    try {
-      await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
-      });
-      setForgotSent(true);
-    } catch {
-      setForgotSent(true); // show success regardless to avoid email enumeration
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, register } = useAuth();
-  const { toast } = useToast();
-
   const reset = () => {
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setIsSubmitting(false);
-  };
-
-  const switchMode = (signup: boolean) => {
-    setIsSignup(signup);
-    setConfirmPassword("");
+    setEmail(""); setPassword(""); setConfirmPassword(""); setIsSubmitting(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,36 +50,38 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
     }
     setIsSubmitting(true);
     try {
-      if (isSignup) {
-        await register(email, password);
-      } else {
-        await login(email, password);
-      }
+      if (isSignup) { await register(email, password); } else { await login(email, password); }
       reset();
       onOpenChange(false);
     } catch (error: any) {
-      toast({
-        title: isSignup ? "Registration failed" : "Login failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      toast({ title: isSignup ? "Registration failed" : "Login failed", description: error.message || "Please try again", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    height: "44px",
-    padding: "0 14px",
-    fontSize: "14px",
-    borderRadius: "8px",
-    border: "1px solid hsl(var(--border))",
-    backgroundColor: "hsl(var(--background))",
-    color: "hsl(var(--foreground))",
-    outline: "none",
-    boxSizing: "border-box",
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+    } catch {}
+    setForgotSent(true);
+    setForgotLoading(false);
   };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", height: "44px", padding: "0 14px", fontSize: "14px",
+    borderRadius: "8px", border: "1px solid hsl(var(--border))",
+    backgroundColor: "hsl(var(--background))", color: "hsl(var(--foreground))",
+    outline: "none", boxSizing: "border-box",
+  };
+
+  const subtitle = isForgot ? "Reset your password" : isSignup ? "Create your account" : "Welcome back";
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
@@ -116,165 +95,147 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
             <p className="text-2xl font-semibold mb-1" style={{ color: "hsl(var(--foreground))" }}>
               Prompt Smith
             </p>
-            <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-              {isForgot ? "Reset your password" : isSignup ? "Create your account" : "Welcome back"}
-            </p>
+            <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>{subtitle}</p>
           </div>
 
-          {/* Forgot password view */}
-          {isForgot ? (
-            forgotSent ? (
-              <div className="text-center space-y-4">
-                <p className="text-sm" style={{ color: "hsl(var(--foreground))" }}>
-                  If that email is registered, a reset link is on its way. Check your inbox.
-                </p>
-                <button
-                  onClick={() => { setIsForgot(false); setForgotSent(false); }}
-                  className="text-sm underline underline-offset-2"
-                  style={{ color: "hsl(var(--muted-foreground))" }}
-                >
+          {/* Forgot password — sent confirmation */}
+          {isForgot && forgotSent && (
+            <div className="text-center space-y-4">
+              <p className="text-sm" style={{ color: "hsl(var(--foreground))" }}>
+                If that email is registered, a reset link is on its way. Check your inbox.
+              </p>
+              <button
+                onClick={() => { setIsForgot(false); setForgotSent(false); }}
+                className="text-sm underline underline-offset-2 hover:opacity-70"
+                style={{ color: "hsl(var(--muted-foreground))" }}
+              >
+                Back to sign in
+              </button>
+            </div>
+          )}
+
+          {/* Forgot password — email form */}
+          {isForgot && !forgotSent && (
+            <form onSubmit={handleForgot} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={e => setForgotEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  style={inputStyle}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                style={{ width: "100%", height: "44px", borderRadius: "8px", border: "none", backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))", fontSize: "14px", fontWeight: 500, cursor: forgotLoading ? "not-allowed" : "pointer", opacity: forgotLoading ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send reset link"}
+              </button>
+              <p className="text-center text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+                <button type="button" onClick={() => setIsForgot(false)} className="underline underline-offset-2 hover:opacity-70">
                   Back to sign in
                 </button>
-              </div>
-            ) : (
-              <form onSubmit={handleForgot} className="space-y-4">
+              </p>
+            </form>
+          )}
+
+          {/* Login / signup form */}
+          {!isForgot && (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
                     Email address
                   </label>
                   <input
                     type="email"
-                    value={forgotEmail}
-                    onChange={e => setForgotEmail(e.target.value)}
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
+                    autoComplete="email"
+                    data-testid="input-email"
                     style={inputStyle}
                   />
                 </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="At least 6 characters"
+                    required
+                    minLength={6}
+                    autoComplete={isSignup ? "new-password" : "current-password"}
+                    data-testid="input-password"
+                    style={inputStyle}
+                  />
+                </div>
+
+                {isSignup && (
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                      Confirm password
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Repeat your password"
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                      data-testid="input-confirm-password"
+                      style={inputStyle}
+                    />
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={forgotLoading}
-                  style={{ width: "100%", height: "44px", borderRadius: "8px", border: "none", backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))", fontSize: "14px", fontWeight: 500, cursor: forgotLoading ? "not-allowed" : "pointer", opacity: forgotLoading ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+                  disabled={isSubmitting}
+                  data-testid="button-submit-auth"
+                  style={{ width: "100%", height: "44px", marginTop: "4px", borderRadius: "8px", border: "none", backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))", fontSize: "14px", fontWeight: 500, cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                 >
-                  {forgotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send reset link"}
+                  {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {isSignup ? "Create account" : "Continue"}
                 </button>
-                <p className="text-center text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  <button type="button" onClick={() => setIsForgot(false)} className="underline underline-offset-2 hover:opacity-70">
-                    Back to sign in
+              </form>
+
+              {!isSignup && (
+                <p className="text-center mt-3 text-sm">
+                  <button
+                    onClick={() => setIsForgot(true)}
+                    className="transition-opacity hover:opacity-70"
+                    style={{ color: "hsl(var(--muted-foreground))" }}
+                  >
+                    Forgot password?
                   </button>
                 </p>
-              </form>
-            )
-          ) : (
+              )}
 
-          /* Form */
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
-                Email address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                autoComplete="email"
-                data-testid="input-email"
-                style={inputStyle}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                required
-                minLength={6}
-                autoComplete={isSignup ? "new-password" : "current-password"}
-                data-testid="input-password"
-                style={inputStyle}
-              />
-            </div>
-
-            {isSignup && (
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
-                  Confirm password
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat your password"
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  data-testid="input-confirm-password"
-                  style={inputStyle}
-                />
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              data-testid="button-submit-auth"
-              style={{
-                width: "100%",
-                height: "44px",
-                marginTop: "4px",
-                borderRadius: "8px",
-                border: "none",
-                backgroundColor: "hsl(var(--foreground))",
-                color: "hsl(var(--background))",
-                fontSize: "14px",
-                fontWeight: 500,
-                cursor: isSubmitting ? "not-allowed" : "pointer",
-                opacity: isSubmitting ? 0.7 : 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-              }}
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isSignup ? "Create account" : "Continue"}
-            </button>
-          </form>
-
-          {!isSignup && (
-            <p className="text-center mt-3 text-sm">
-              <button
-                onClick={() => setIsForgot(true)}
-                className="transition-opacity hover:opacity-70"
-                style={{ color: "hsl(var(--muted-foreground))" }}
-              >
-                Forgot password?
-              </button>
-            </p>
-          )}
-          </form>
-          )}
-
-          {/* Toggle */}
-          {!isForgot && (
-            <p className="text-center mt-6 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-              {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-              <button
-                onClick={() => switchMode(!isSignup)}
-                data-testid="button-toggle-auth-mode"
-                className="font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
-                style={{ color: "hsl(var(--foreground))" }}
-              >
-                {isSignup ? "Sign in" : "Sign up"}
-              </button>
-            </p>
+              <p className="text-center mt-6 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+                {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+                <button
+                  onClick={() => { setIsSignup(!isSignup); setConfirmPassword(""); }}
+                  data-testid="button-toggle-auth-mode"
+                  className="font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+                  style={{ color: "hsl(var(--foreground))" }}
+                >
+                  {isSignup ? "Sign in" : "Sign up"}
+                </button>
+              </p>
+            </>
           )}
         </div>
       </DialogContent>
