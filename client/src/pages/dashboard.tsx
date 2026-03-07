@@ -494,19 +494,37 @@ export default function DashboardPage() {
                   I'll create the perfect prompt for any AI tool
                 </h2>
 
-                <button
-                  onClick={toggleVoice}
-                  data-testid="button-mic-center"
-                  className="w-20 h-20 rounded-full flex items-center justify-center mb-10 transition-all duration-300"
-                  style={{
-                    backgroundColor: "#1DB954",
-                    border: "2px solid #1DB954",
-                  }}
-                >
-                  {isListening
-                    ? <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
-                    : <Mic className="w-8 h-8" style={{ color: "#ffffff" }} />}
-                </button>
+                <div className="relative flex items-center justify-center mb-10">
+                  {/* Pulsing ring — only when listening */}
+                  {isListening && (
+                    <>
+                      <span
+                        className="absolute rounded-full animate-ping"
+                        style={{ width: "88px", height: "88px", backgroundColor: "#1DB954", opacity: 0.25 }}
+                      />
+                      <span
+                        className="absolute rounded-full animate-ping"
+                        style={{ width: "104px", height: "104px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }}
+                      />
+                    </>
+                  )}
+                  <button
+                    onClick={toggleVoice}
+                    data-testid="button-mic-center"
+                    className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
+                    style={{
+                      backgroundColor: "#1DB954",
+                      border: "2px solid #1DB954",
+                      boxShadow: isListening
+                        ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)"
+                        : "0 2px 8px rgba(0,0,0,0.12)",
+                    }}
+                  >
+                    {isListening
+                      ? <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
+                      : <Mic className="w-8 h-8" style={{ color: "#ffffff" }} />}
+                  </button>
+                </div>
 
                 <div className="w-full max-w-2xl">
                   {inputBox("")}
