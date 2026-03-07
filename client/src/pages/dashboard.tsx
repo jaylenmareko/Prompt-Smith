@@ -534,7 +534,7 @@ export default function DashboardPage() {
                   {/* Speak hint — floats to the right of the mic */}
                   <button
                     onClick={toggleVoice}
-                    className="absolute text-xs transition-colors"
+                    className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
                     style={{
                       left: "calc(50% + 52px)",
                       color: isListening ? "#1DB954" : "#c4c0bb",
