@@ -4,7 +4,7 @@ import type { Profile, InsertProfile, Conversation, ChatMessage, SavedPrompt } f
 import { eq, desc, and } from "drizzle-orm";
 
 const PLAN_LIMITS: Record<string, { daily: number | null; monthly: number | null }> = {
-  free:      { daily: 10,   monthly: null },
+  free:      { daily: 5,    monthly: null },
   starter:   { daily: null, monthly: 500  },
   unlimited: { daily: null, monthly: null },
 };

@@ -162,7 +162,7 @@ export async function registerRoutes(
       const { input, targetTool: selectedTool } = req.body;
       if (!input) return res.status(400).json({ message: "Input is required" });
 
-      const GUEST_DAILY_LIMIT = 10;
+      const GUEST_DAILY_LIMIT = 5;
       const sess = req.session as any;
 
       if (req.isAuthenticated()) {

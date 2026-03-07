@@ -197,11 +197,11 @@ export default function DashboardPage() {
         const isMonthly = err.reason === "monthly";
         let wallText = "";
         if (isGuest) {
-          wallText = "You've used your 10 free prompts for today. Sign up for free to keep your history, or come back tomorrow.";
+          wallText = "You've used your 5 free prompts for today. Sign up for free to keep your history, or come back tomorrow.";
         } else if (isMonthly) {
           wallText = "You've used all your prompts for this month. Upgrade to Unlimited to keep going, or check back next month.";
         } else {
-          wallText = "You've used all 10 prompts for today. Upgrade for more, or check back tomorrow.";
+          wallText = "You've used all 5 prompts for today. Upgrade for more, or check back tomorrow.";
         }
         setMessages(prev => prev.filter(m => m.id !== assistantMsgId));
         setMessages(prev => [...prev, {
