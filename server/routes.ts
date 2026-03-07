@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, hashPassword } from "./auth";
+import { setupAuth, hashPassword, comparePasswords } from "./auth";
 import passport from "passport";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -103,6 +103,58 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
     const { password: _, ...safeProfile } = req.user!;
     res.json(safeProfile);
+  });
+
+  app.patch("/api/auth/email", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const { newEmail, password } = req.body;
+    if (!newEmail || !password) return res.status(400).json({ message: "Email and password are required" });
+    try {
+      const user = req.user!;
+      const valid = await comparePasswords(password, user.password);
+      if (!valid) return res.status(401).json({ message: "Incorrect password" });
+      const existing = await storage.getProfileByEmail(newEmail);
+      if (existing) return res.status(400).json({ message: "Email already in use" });
+      await storage.updateProfile(user.id, { email: newEmail });
+      res.json({ message: "Email updated" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update email" });
+    }
+  });
+
+  app.patch("/api/auth/password", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ message: "Both passwords are required" });
+    if (newPassword.length < 6) return res.status(400).json({ message: "Password must be at least 6 characters" });
+    try {
+      const user = req.user!;
+      const valid = await comparePasswords(currentPassword, user.password);
+      if (!valid) return res.status(401).json({ message: "Incorrect current password" });
+      const hashed = await hashPassword(newPassword);
+      await storage.updateProfile(user.id, { password: hashed });
+      res.json({ message: "Password updated" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update password" });
+    }
+  });
+
+  app.delete("/api/auth/account", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ message: "Password is required" });
+    try {
+      const user = req.user!;
+      const valid = await comparePasswords(password, user.password);
+      if (!valid) return res.status(401).json({ message: "Incorrect password" });
+      await storage.deleteProfile(user.id);
+      req.logout((err) => {
+        if (err) return res.status(500).json({ message: "Account deleted but logout failed" });
+        res.json({ message: "Account deleted" });
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to delete account" });
+    }
   });
 
   app.post("/api/generate", async (req, res) => {

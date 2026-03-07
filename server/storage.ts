@@ -24,6 +24,7 @@ export interface IStorage {
   getSavedPrompts(userId: number): Promise<SavedPrompt[]>;
   createSavedPrompt(userId: number, name: string, promptText: string, targetTool: string, userInput: string): Promise<SavedPrompt>;
   deleteSavedPrompt(id: number): Promise<void>;
+  deleteProfile(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -141,6 +142,16 @@ export class DatabaseStorage implements IStorage {
 
   async deleteSavedPrompt(id: number): Promise<void> {
     await db.delete(savedPrompts).where(eq(savedPrompts.id, id));
+  }
+
+  async deleteProfile(id: number): Promise<void> {
+    const userConvs = await db.select().from(conversations).where(eq(conversations.userId, id));
+    for (const conv of userConvs) {
+      await db.delete(chatMessages).where(eq(chatMessages.conversationId, conv.id));
+    }
+    await db.delete(conversations).where(eq(conversations.userId, id));
+    await db.delete(savedPrompts).where(eq(savedPrompts.userId, id));
+    await db.delete(profiles).where(eq(profiles.id, id));
   }
 }
 

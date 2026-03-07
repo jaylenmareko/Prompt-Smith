@@ -1,19 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, Plus, Search, Bookmark, MessageSquare } from "lucide-react";
+import {
+  Trash2, Settings, User, LogIn, LogOut, ChevronRight,
+  Zap, Plus, Search, Bookmark, MessageSquare, Sun, Moon, Check,
+} from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
+import { queryClient } from "@/lib/queryClient";
 import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
 import type { Profile } from "@shared/schema";
 
@@ -23,8 +20,16 @@ const LANGUAGES = [
 ];
 
 const LANG_KEY = "ps_language";
+const THEME_KEY = "ps_theme";
 
-const NAME_KEY = "ps_user_name";
+const PLAN_LABELS: Record<string, string> = {
+  free: "Free",
+  starter: "Starter",
+  pro: "Pro",
+  max: "Max",
+};
+
+type SettingsSection = "general" | "account" | "billing";
 
 interface AppSidebarProps {
   conversations: LocalConversation[];
@@ -51,51 +56,71 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [, setLocation] = useLocation();
   const { logout } = useAuth();
+  const { toast } = useToast();
+
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [nameInput, setNameInput] = useState("");
-  const [displayName, setDisplayName] = useState(
-    () => localStorage.getItem(NAME_KEY) || ""
-  );
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>("general");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [langExpanded, setLangExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchPrompts, setSearchPrompts] = useState("");
   const [savedOpen, setSavedOpen] = useState(false);
+
   const [selectedLang, setSelectedLang] = useState(
     () => localStorage.getItem(LANG_KEY) || "English"
   );
+  const [theme, setTheme] = useState<"light" | "dark">(
+    () => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
+  );
+
+  // Email change
+  const [newEmail, setNewEmail] = useState("");
+  const [emailConfirmPass, setEmailConfirmPass] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+
+  // Password change
+  const [currentPass, setCurrentPass] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const [passLoading, setPassLoading] = useState(false);
+
+  // Delete account
+  const [deletePass, setDeletePass] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close menu when clicking outside
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
+
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
-        setLangExpanded(false);
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
 
-  const openSettings = () => {
-    setNameInput(displayName);
+  const openSettings = (section: SettingsSection = "general") => {
     setMenuOpen(false);
-    setLangExpanded(false);
+    setSettingsSection(section);
+    setNewEmail(""); setEmailConfirmPass("");
+    setCurrentPass(""); setNewPass(""); setConfirmPass("");
+    setDeletePass(""); setShowDeleteConfirm(false);
     setSettingsOpen(true);
-  };
-
-  const saveSettings = () => {
-    const trimmed = nameInput.trim();
-    setDisplayName(trimmed);
-    localStorage.setItem(NAME_KEY, trimmed);
-    setSettingsOpen(false);
   };
 
   const handleLogout = async () => {
     setMenuOpen(false);
-    setLangExpanded(false);
     await logout();
     setLocation("/login");
   };
@@ -103,22 +128,99 @@ export function AppSidebar({
   const selectLanguage = (lang: string) => {
     setSelectedLang(lang);
     localStorage.setItem(LANG_KEY, lang);
-    setLangExpanded(false);
+  };
+
+  const handleEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmail.trim() || !emailConfirmPass) return;
+    setEmailLoading(true);
+    try {
+      const res = await fetch("/api/auth/email", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newEmail: newEmail.trim(), password: emailConfirmPass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({ title: "Email updated" });
+      setNewEmail(""); setEmailConfirmPass("");
+    } catch (err: any) {
+      toast({ title: "Failed to update email", description: err.message, variant: "destructive" });
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPass !== confirmPass) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (newPass.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    setPassLoading(true);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      toast({ title: "Password updated" });
+      setCurrentPass(""); setNewPass(""); setConfirmPass("");
+    } catch (err: any) {
+      toast({ title: "Failed to update password", description: err.message, variant: "destructive" });
+    } finally {
+      setPassLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePass) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch("/api/auth/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: deletePass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setSettingsOpen(false);
+      await logout();
+      setLocation("/login");
+    } catch (err: any) {
+      toast({ title: "Failed to delete account", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const avatarLetter = user?.email.charAt(0).toUpperCase() ?? "";
-
-  const PLAN_LABELS: Record<string, string> = {
-    free: "Free",
-    starter: "Starter",
-    pro: "Pro",
-    max: "Max",
-  };
   const planLabel = user ? (PLAN_LABELS[user.plan] ?? user.plan) : "";
+
+  const sectionBtn = (label: string, s: SettingsSection) => (
+    <button
+      key={s}
+      onClick={() => setSettingsSection(s)}
+      className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
+      style={{
+        backgroundColor: settingsSection === s ? "#f0ece8" : "transparent",
+        color: settingsSection === s ? "#18181b" : "#78716c",
+        fontWeight: settingsSection === s ? 500 : 400,
+      }}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <>
-      {/* Plain div — no shadcn Sidebar so it doesn't inject spacers into the flex layout */}
       <div
         className="flex flex-col h-full relative"
         style={{ backgroundColor: "#ffffff", borderRight: "1px solid #e5e2dd", width: "100%" }}
@@ -146,10 +248,7 @@ export function AppSidebar({
             <Plus className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
             New chat
           </button>
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-lg"
-            style={{ backgroundColor: "#f5f5f4" }}
-          >
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: "#f5f5f4" }}>
             <Search className="w-4 h-4 shrink-0" style={{ color: "#a8a29e" }} />
             <input
               type="text"
@@ -160,10 +259,7 @@ export function AppSidebar({
               style={{ color: "#18181b" }}
             />
           </div>
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-lg"
-            style={{ backgroundColor: "#f5f5f4" }}
-          >
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: "#f5f5f4" }}>
             <Search className="w-4 h-4 shrink-0" style={{ color: "#a8a29e" }} />
             <input
               type="text"
@@ -179,8 +275,7 @@ export function AppSidebar({
         {/* Content */}
         <ScrollArea className="flex-1 px-2">
           <div className="pb-4">
-
-            {/* Saved Prompts section */}
+            {/* Saved Prompts */}
             <div className="mt-3">
               <button
                 onClick={() => setSavedOpen(o => !o)}
@@ -215,12 +310,8 @@ export function AppSidebar({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm truncate" style={{ color: "#18181b" }}>
-                          {prompt.name}
-                        </p>
-                        <p className="text-xs truncate mt-0.5" style={{ color: "#a8a29e" }}>
-                          {prompt.targetTool}
-                        </p>
+                        <p className="text-sm truncate" style={{ color: "#18181b" }}>{prompt.name}</p>
+                        <p className="text-xs truncate mt-0.5" style={{ color: "#a8a29e" }}>{prompt.targetTool}</p>
                       </div>
                       <span
                         onClick={e => { e.stopPropagation(); onDeleteSavedPrompt(prompt.id); }}
@@ -234,7 +325,7 @@ export function AppSidebar({
               })()}
             </div>
 
-            {/* Chats section */}
+            {/* Chats */}
             <div className="mt-4">
               <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium" style={{ color: "#44403c" }}>
                 <MessageSquare className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
@@ -256,9 +347,7 @@ export function AppSidebar({
                     onClick={() => onSelectConversation(conv.id)}
                     data-testid={`conversation-${conv.id}`}
                     className="group w-full text-left py-2 px-3 rounded-lg transition-colors"
-                    style={{
-                      backgroundColor: activeConversationId === conv.id ? "#f0ece8" : "transparent",
-                    }}
+                    style={{ backgroundColor: activeConversationId === conv.id ? "#f0ece8" : "transparent" }}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p
@@ -278,7 +367,6 @@ export function AppSidebar({
                 ));
               })()}
             </div>
-
           </div>
         </ScrollArea>
 
@@ -288,49 +376,23 @@ export function AppSidebar({
           style={{ borderTop: "1px solid #e5e2dd" }}
           ref={menuRef}
         >
-          {/* Profile menu popup */}
+          {/* Profile popup */}
           {user && menuOpen && (
             <div
               className="absolute left-3 right-3 rounded-xl shadow-lg py-1 z-50"
-              style={{
-                bottom: "calc(100% + 6px)",
-                backgroundColor: "#ffffff",
-                border: "1px solid #e5e2dd",
-              }}
+              style={{ bottom: "calc(100% + 6px)", backgroundColor: "#ffffff", border: "1px solid #e5e2dd" }}
             >
-              {/* Language */}
               <button
-                onClick={() => setLangExpanded(o => !o)}
+                onClick={() => openSettings("general")}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
                 style={{ color: "#1c1a17" }}
               >
-                <Globe className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
-                <span className="flex-1 text-left">Language</span>
-                <span className="text-xs mr-1" style={{ color: "#a8a29e" }}>{selectedLang}</span>
-                <ChevronRight
-                  className="w-3.5 h-3.5 shrink-0 transition-transform"
-                  style={{ color: "#a8a29e", transform: langExpanded ? "rotate(90deg)" : "rotate(0deg)" }}
-                />
+                <Settings className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                Settings
               </button>
-              {langExpanded && (
-                <div className="pb-1">
-                  {LANGUAGES.map(lang => (
-                    <button
-                      key={lang}
-                      onClick={() => selectLanguage(lang)}
-                      className="w-full flex items-center justify-between px-4 py-1.5 text-xs transition-colors hover:bg-stone-50"
-                      style={{ color: selectedLang === lang ? "#1c1a17" : "#78716c", paddingLeft: "44px" }}
-                    >
-                      {lang}
-                      {selectedLang === lang && (
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#1c1a17" }} />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
 
-              {/* Upgrade plan */}
+              <div style={{ height: "1px", backgroundColor: "#e5e2dd", margin: "4px 12px" }} />
+
               <button
                 onClick={() => setMenuOpen(false)}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
@@ -342,19 +404,6 @@ export function AppSidebar({
 
               <div style={{ height: "1px", backgroundColor: "#e5e2dd", margin: "4px 12px" }} />
 
-              {/* Settings */}
-              <button
-                onClick={openSettings}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
-                style={{ color: "#1c1a17" }}
-              >
-                <Settings className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
-                Settings
-              </button>
-
-              <div style={{ height: "1px", backgroundColor: "#e5e2dd", margin: "4px 12px" }} />
-
-              {/* Logout */}
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
@@ -368,7 +417,7 @@ export function AppSidebar({
 
           {user ? (
             <button
-              onClick={() => { setMenuOpen(o => !o); setLangExpanded(false); }}
+              onClick={() => setMenuOpen(o => !o)}
               data-testid="button-profile"
               className="w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-stone-100"
             >
@@ -403,29 +452,257 @@ export function AppSidebar({
             </div>
           )}
         </div>
-
       </div>
 
       {/* Settings modal */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-1">
-            <Label htmlFor="display-name" className="text-sm font-medium">Display name</Label>
-            <Input
-              id="display-name"
-              value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
-              placeholder="Enter your name..."
-              onKeyDown={e => { if (e.key === "Enter") saveSettings(); }}
-            />
+        <DialogContent
+          className="p-0 gap-0 overflow-hidden"
+          style={{ maxWidth: "680px", width: "95vw", height: "600px" }}
+        >
+          <div className="flex h-full">
+            {/* Left nav */}
+            <div
+              className="flex flex-col flex-shrink-0"
+              style={{ width: "176px", borderRight: "1px solid #e5e2dd", backgroundColor: "#fafaf9" }}
+            >
+              <div className="px-4 pt-5 pb-4">
+                <p className="text-sm font-semibold" style={{ color: "#18181b" }}>Settings</p>
+              </div>
+              <nav className="flex flex-col gap-0.5 px-2">
+                {sectionBtn("General", "general")}
+                {sectionBtn("Account", "account")}
+                {sectionBtn("Billing", "billing")}
+              </nav>
+            </div>
+
+            {/* Right content */}
+            <div className="flex-1 overflow-y-auto">
+
+              {/* ── GENERAL ── */}
+              {settingsSection === "general" && (
+                <div className="p-6 space-y-8">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#a8a29e" }}>Language</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {LANGUAGES.map(lang => (
+                        <button
+                          key={lang}
+                          onClick={() => selectLanguage(lang)}
+                          className="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors"
+                          style={{
+                            backgroundColor: selectedLang === lang ? "#f0ece8" : "#f5f5f4",
+                            color: selectedLang === lang ? "#18181b" : "#78716c",
+                          }}
+                        >
+                          {lang}
+                          {selectedLang === lang && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#78716c" }} />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#a8a29e" }}>Appearance</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setTheme("light")}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border"
+                        style={{
+                          backgroundColor: theme === "light" ? "#1c1a17" : "#f5f5f4",
+                          color: theme === "light" ? "#ffffff" : "#78716c",
+                          borderColor: theme === "light" ? "#1c1a17" : "#e5e2dd",
+                        }}
+                      >
+                        <Sun className="w-4 h-4" />
+                        Light
+                      </button>
+                      <button
+                        onClick={() => setTheme("dark")}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border"
+                        style={{
+                          backgroundColor: theme === "dark" ? "#1c1a17" : "#f5f5f4",
+                          color: theme === "dark" ? "#ffffff" : "#78716c",
+                          borderColor: theme === "dark" ? "#1c1a17" : "#e5e2dd",
+                        }}
+                      >
+                        <Moon className="w-4 h-4" />
+                        Dark
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── ACCOUNT ── */}
+              {settingsSection === "account" && (
+                <div className="p-6 space-y-6">
+                  {/* Email */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#a8a29e" }}>Email address</p>
+                    <p className="text-sm mb-3" style={{ color: "#44403c" }}>{user?.email}</p>
+                    <form onSubmit={handleEmailChange} className="space-y-2">
+                      <Input
+                        type="email"
+                        placeholder="New email address"
+                        value={newEmail}
+                        onChange={e => setNewEmail(e.target.value)}
+                        className="h-9 text-sm"
+                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
+                      />
+                      <Input
+                        type="password"
+                        placeholder="Current password to confirm"
+                        value={emailConfirmPass}
+                        onChange={e => setEmailConfirmPass(e.target.value)}
+                        className="h-9 text-sm"
+                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
+                      />
+                      <button
+                        type="submit"
+                        disabled={emailLoading || !newEmail.trim() || !emailConfirmPass}
+                        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+                        style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                      >
+                        {emailLoading ? "Updating…" : "Update email"}
+                      </button>
+                    </form>
+                  </div>
+
+                  <div style={{ height: "1px", backgroundColor: "#e5e2dd" }} />
+
+                  {/* Password */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#a8a29e" }}>Password</p>
+                    <form onSubmit={handlePasswordChange} className="space-y-2">
+                      <Input
+                        type="password"
+                        placeholder="Current password"
+                        value={currentPass}
+                        onChange={e => setCurrentPass(e.target.value)}
+                        className="h-9 text-sm"
+                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
+                      />
+                      <Input
+                        type="password"
+                        placeholder="New password"
+                        value={newPass}
+                        onChange={e => setNewPass(e.target.value)}
+                        className="h-9 text-sm"
+                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
+                      />
+                      <Input
+                        type="password"
+                        placeholder="Confirm new password"
+                        value={confirmPass}
+                        onChange={e => setConfirmPass(e.target.value)}
+                        className="h-9 text-sm"
+                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
+                      />
+                      <button
+                        type="submit"
+                        disabled={passLoading || !currentPass || !newPass || !confirmPass}
+                        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+                        style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                      >
+                        {passLoading ? "Updating…" : "Update password"}
+                      </button>
+                    </form>
+                  </div>
+
+                  <div style={{ height: "1px", backgroundColor: "#e5e2dd" }} />
+
+                  {/* Log out of all devices */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#a8a29e" }}>Sessions</p>
+                    <p className="text-xs mb-3" style={{ color: "#78716c" }}>Ends your current session on all devices.</p>
+                    <button
+                      onClick={handleLogout}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
+                      style={{ color: "#18181b", borderColor: "#e5e2dd", backgroundColor: "#ffffff" }}
+                    >
+                      Log out of all devices
+                    </button>
+                  </div>
+
+                  <div style={{ height: "1px", backgroundColor: "#e5e2dd" }} />
+
+                  {/* Delete account */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#dc2626" }}>Danger zone</p>
+                    <p className="text-xs mb-3" style={{ color: "#78716c" }}>
+                      Permanently deletes your account and all data. This cannot be undone.
+                    </p>
+                    {!showDeleteConfirm ? (
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
+                        style={{ color: "#dc2626", borderColor: "#fecaca", backgroundColor: "#fff5f5" }}
+                      >
+                        Delete account
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <Input
+                          type="password"
+                          placeholder="Enter your password to confirm"
+                          value={deletePass}
+                          onChange={e => setDeletePass(e.target.value)}
+                          className="h-9 text-sm"
+                          style={{ backgroundColor: "#f5f5f4", border: "1px solid #fecaca" }}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleDeleteAccount}
+                            disabled={deleteLoading || !deletePass}
+                            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
+                            style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
+                          >
+                            {deleteLoading ? "Deleting…" : "Confirm delete"}
+                          </button>
+                          <button
+                            onClick={() => { setShowDeleteConfirm(false); setDeletePass(""); }}
+                            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            style={{ color: "#78716c", backgroundColor: "#f5f5f4" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── BILLING ── */}
+              {settingsSection === "billing" && (
+                <div className="p-6">
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#a8a29e" }}>Subscription</p>
+                  <div
+                    className="rounded-xl p-4 border mb-4"
+                    style={{ borderColor: "#e5e2dd", backgroundColor: "#fafaf9" }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: "#18181b" }}>Current plan</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#a8a29e" }}>{planLabel || "Free"}</p>
+                      </div>
+                      <button
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                        style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                      >
+                        Upgrade
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs" style={{ color: "#a8a29e" }}>
+                    Billing management coming soon.
+                  </p>
+                </div>
+              )}
+
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setSettingsOpen(false)}>Cancel</Button>
-            <Button onClick={saveSettings}>Save</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
