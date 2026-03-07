@@ -502,8 +502,7 @@ export default function DashboardPage() {
                   I'll create the perfect prompt for any AI tool
                 </h2>
 
-                <div className="flex items-center gap-4 mb-10">
-                  <div className="relative flex items-center justify-center">
+                <div className="relative flex items-center justify-center mb-10">
                   {/* Pulsing ring — only when listening */}
                   {isListening && (
                     <>
@@ -531,15 +530,15 @@ export default function DashboardPage() {
                   >
                     <Mic className="w-8 h-8" style={{ color: "#ffffff" }} />
                   </button>
-                  </div>
 
-                  {/* Speak hint */}
+                  {/* Speak hint — floats to the right of the mic */}
                   <button
                     onClick={toggleVoice}
-                    className="text-xs px-3 py-1.5 rounded-full border transition-colors hover:bg-stone-100"
+                    className="absolute text-xs transition-colors"
                     style={{
-                      color: isListening ? "#1DB954" : "#78716c",
-                      borderColor: isListening ? "#1DB954" : "#e5e2dd",
+                      left: "calc(50% + 52px)",
+                      color: isListening ? "#1DB954" : "#c4c0bb",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {isListening ? "Listening..." : "Click to start speaking"}
