@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
+import { useLanguage } from "@/lib/language-context";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const SIDEBAR_WIDTH = 260;
@@ -349,7 +351,7 @@ export default function DashboardPage() {
         value={inputValue}
         onChange={e => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Describe what you want..."
+        placeholder={t.inputPlaceholder}
         rows={1}
         disabled={disabled}
         data-testid={`input-prompt${testIdSuffix}`}
@@ -377,7 +379,7 @@ export default function DashboardPage() {
       className={`text-center ${compact ? "mt-2 text-[11px]" : "mt-3 text-xs"}`}
       style={{ color: "hsl(var(--muted-foreground))" }}
     >
-      Choose your platform — or just mention it in your description
+      {t.platformHint}
     </p>
   );
 
@@ -463,14 +465,14 @@ export default function DashboardPage() {
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
                   style={{ color: "hsl(var(--muted-foreground))" }}
                 >
-                  Log in
+                  {t.logIn}
                 </button>
                 <button
                   onClick={() => setLocation("/login?mode=signup")}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
                   style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
                 >
-                  Sign up
+                  {t.signUpFree}
                 </button>
               </div>
             )}
@@ -484,7 +486,7 @@ export default function DashboardPage() {
                   style={{ color: "hsl(var(--foreground))" }}
                   data-testid="text-welcome-heading"
                 >
-                  I'll create the perfect prompt for any AI tool
+                  {t.welcomeHeading}
                 </h2>
 
                 <div className="relative flex items-center justify-center mb-10">
@@ -526,7 +528,7 @@ export default function DashboardPage() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {isListening ? "Listening..." : "Click to start speaking"}
+                    {isListening ? t.listening : t.clickToSpeak}
                   </button>
                 </div>
 
@@ -568,7 +570,7 @@ export default function DashboardPage() {
                           >
                             {msg.isStreaming && !msg.content ? (
                               <span className="flex items-center gap-1.5 py-0.5">
-                                <span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>Crafting your prompt</span>
+                                <span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>{t.craftingPrompt}</span>
                                 <span className="flex gap-1">
                                   {[0, 1, 2].map(i => (
                                     <span
@@ -597,7 +599,7 @@ export default function DashboardPage() {
                                 className="h-6 px-2 text-xs gap-1"
                                 style={{ color: "hsl(var(--muted-foreground))" }}
                               >
-                                <Copy className="w-3 h-3" /> Copy
+                                <Copy className="w-3 h-3" /> {t.copy}
                               </Button>
                               <Button
                                 size="sm" variant="ghost"
@@ -606,7 +608,7 @@ export default function DashboardPage() {
                                 className="h-6 px-2 text-xs gap-1"
                                 style={{ color: "hsl(var(--muted-foreground))" }}
                               >
-                                <Bookmark className="w-3 h-3" /> Save
+                                <Bookmark className="w-3 h-3" /> {t.save}
                               </Button>
                             </div>
                           )}
@@ -663,10 +665,10 @@ export default function DashboardPage() {
             <X className="w-3 h-3" />
           </button>
           <p className="text-sm font-semibold mb-1 pr-4" style={{ color: "hsl(var(--foreground))" }}>
-            Save your prompts
+            {t.savePrompts}
           </p>
           <p className="text-xs mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
-            Create a free account to keep your history and saved prompts across sessions.
+            {t.createFreeAccount}
           </p>
           <div className="flex gap-2">
             <button
@@ -674,14 +676,14 @@ export default function DashboardPage() {
               className="flex-1 text-xs py-1.5 rounded-lg font-medium border transition-colors"
               style={{ color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--border))" }}
             >
-              Log in
+              {t.logIn}
             </button>
             <button
               onClick={() => setLocation("/login?mode=signup")}
               className="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
               style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
             >
-              Sign up free
+              {t.signUpFree}
             </button>
           </div>
         </div>

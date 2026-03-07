@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
+import { useLanguage } from "@/lib/language-context";
 import { queryClient } from "@/lib/queryClient";
 import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
 import type { Profile } from "@shared/schema";
@@ -19,7 +20,6 @@ const LANGUAGES = [
   "Português", "日本語", "中文", "한국어",
 ];
 
-const LANG_KEY = "ps_language";
 const THEME_KEY = "ps_theme";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -57,6 +57,7 @@ export function AppSidebar({
   const [, setLocation] = useLocation();
   const { logout } = useAuth();
   const { toast } = useToast();
+  const { lang, setLang, t } = useLanguage();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] = useState<SettingsSection>("general");
@@ -65,9 +66,6 @@ export function AppSidebar({
   const [searchPrompts, setSearchPrompts] = useState("");
   const [savedOpen, setSavedOpen] = useState(false);
 
-  const [selectedLang, setSelectedLang] = useState(
-    () => localStorage.getItem(LANG_KEY) || "English"
-  );
   const [theme, setTheme] = useState<"light" | "dark">(
     () => (localStorage.getItem(THEME_KEY) as "light" | "dark") || "light"
   );
@@ -131,11 +129,6 @@ export function AppSidebar({
     setMenuOpen(false);
     await logout();
     setLocation("/login");
-  };
-
-  const selectLanguage = (lang: string) => {
-    setSelectedLang(lang);
-    localStorage.setItem(LANG_KEY, lang);
   };
 
   const handleEmailChange = async (e: React.FormEvent) => {
@@ -212,14 +205,13 @@ export function AppSidebar({
   const avatarLetter = user?.email.charAt(0).toUpperCase() ?? "";
   const planLabel = user ? (PLAN_LABELS[user.plan] ?? user.plan) : "";
 
-  // Neutral colors — no amber/orange from --accent or --sidebar-* variables
-  const BG   = "hsl(var(--background))";
-  const CARD = "hsl(var(--card))";
-  const FG   = "hsl(var(--foreground))";
-  const MUT  = "hsl(var(--muted))";
-  const MUTFG = "hsl(var(--muted-foreground))";
+  const BG     = "hsl(var(--background))";
+  const CARD   = "hsl(var(--card))";
+  const FG     = "hsl(var(--foreground))";
+  const MUT    = "hsl(var(--muted))";
+  const MUTFG  = "hsl(var(--muted-foreground))";
   const BORDER = "hsl(var(--border))";
-  const SEC  = "hsl(var(--secondary))";   // neutral gray hover/active — NOT amber accent
+  const SEC    = "hsl(var(--secondary))";
 
   const sectionBtn = (label: string, s: SettingsSection) => (
     <button
@@ -265,7 +257,7 @@ export function AppSidebar({
             onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
           >
             <Plus className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-            New chat
+            {t.newChat}
           </button>
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: MUT }}>
             <Search className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
@@ -273,7 +265,7 @@ export function AppSidebar({
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search chats"
+              placeholder={t.searchChats}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
               style={{ color: FG }}
             />
@@ -284,7 +276,7 @@ export function AppSidebar({
               type="text"
               value={searchPrompts}
               onChange={e => setSearchPrompts(e.target.value)}
-              placeholder="Search saved prompts"
+              placeholder={t.searchSavedPrompts}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
               style={{ color: FG }}
             />
@@ -304,7 +296,7 @@ export function AppSidebar({
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <Bookmark className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-                <span className="flex-1 text-left">Saved Prompts</span>
+                <span className="flex-1 text-left">{t.savedPrompts}</span>
                 <ChevronRight
                   className="w-4 h-4 shrink-0 transition-transform"
                   style={{ color: MUTFG, transform: savedOpen ? "rotate(90deg)" : "rotate(0deg)" }}
@@ -319,7 +311,7 @@ export function AppSidebar({
                 return filtered.length === 0 ? (
                   <div className="px-3 py-3 text-center">
                     <p className="text-xs" style={{ color: MUTFG }}>
-                      {searchPrompts ? "No matching prompts" : "No saved prompts yet"}
+                      {searchPrompts ? t.noMatchingPrompts : t.noSavedPromptsYet}
                     </p>
                   </div>
                 ) : filtered.map(prompt => (
@@ -352,7 +344,7 @@ export function AppSidebar({
             <div className="mt-4">
               <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium" style={{ color: FG }}>
                 <MessageSquare className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-                Chats
+                {t.chats}
               </div>
               {(() => {
                 const filtered = searchQuery.trim()
@@ -361,7 +353,7 @@ export function AppSidebar({
                 return filtered.length === 0 ? (
                   <div className="px-3 py-4 text-center">
                     <p className="text-xs" style={{ color: MUTFG }}>
-                      {searchQuery ? "No matching chats" : "No chats yet"}
+                      {searchQuery ? t.noMatchingChats : t.noChatsYet}
                     </p>
                   </div>
                 ) : filtered.map(conv => (
@@ -396,7 +388,6 @@ export function AppSidebar({
           style={{ borderTop: `1px solid ${BORDER}` }}
           ref={menuRef}
         >
-          {/* Profile popup */}
           {user && menuOpen && (
             <div
               className="absolute left-3 right-3 rounded-xl shadow-lg py-1 z-50"
@@ -410,7 +401,7 @@ export function AppSidebar({
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <Settings className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-                Settings
+                {t.settings}
               </button>
 
               <div style={{ height: "1px", backgroundColor: BORDER, margin: "4px 12px" }} />
@@ -423,7 +414,7 @@ export function AppSidebar({
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <Zap className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-                Upgrade plan
+                {t.upgradePlan}
               </button>
 
               <div style={{ height: "1px", backgroundColor: BORDER, margin: "4px 12px" }} />
@@ -436,7 +427,7 @@ export function AppSidebar({
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <LogOut className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-                Log out
+                {t.logOut}
               </button>
             </div>
           )}
@@ -467,7 +458,7 @@ export function AppSidebar({
                 className="w-full text-xs py-2 rounded-xl font-medium transition-colors"
                 style={{ backgroundColor: FG, color: BG }}
               >
-                Sign up free
+                {t.signUpFree}
               </button>
               <button
                 onClick={() => setLocation("/login")}
@@ -475,7 +466,7 @@ export function AppSidebar({
                 style={{ color: FG, border: `1px solid ${BORDER}` }}
               >
                 <LogIn className="w-3 h-3" />
-                Log in
+                {t.logIn}
               </button>
             </div>
           )}
@@ -495,12 +486,12 @@ export function AppSidebar({
               style={{ width: "176px", borderRight: `1px solid ${BORDER}`, backgroundColor: CARD }}
             >
               <div className="px-4 pt-5 pb-4">
-                <p className="text-sm font-semibold" style={{ color: FG }}>Settings</p>
+                <p className="text-sm font-semibold" style={{ color: FG }}>{t.settings}</p>
               </div>
               <nav className="flex flex-col gap-0.5 px-2">
-                {sectionBtn("General", "general")}
-                {sectionBtn("Account", "account")}
-                {sectionBtn("Billing", "billing")}
+                {sectionBtn(t.general, "general")}
+                {sectionBtn(t.account, "account")}
+                {sectionBtn(t.billing, "billing")}
               </nav>
             </div>
 
@@ -511,27 +502,27 @@ export function AppSidebar({
               {settingsSection === "general" && (
                 <div className="p-6 space-y-8">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>Language</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>{t.language}</p>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {LANGUAGES.map(lang => (
+                      {LANGUAGES.map(l => (
                         <button
-                          key={lang}
-                          onClick={() => selectLanguage(lang)}
+                          key={l}
+                          onClick={() => setLang(l)}
                           className="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors"
                           style={{
-                            backgroundColor: selectedLang === lang ? SEC : MUT,
-                            color: selectedLang === lang ? FG : MUTFG,
+                            backgroundColor: lang === l ? SEC : MUT,
+                            color: lang === l ? FG : MUTFG,
                           }}
                         >
-                          {lang}
-                          {selectedLang === lang && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: MUTFG }} />}
+                          {l}
+                          {lang === l && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: MUTFG }} />}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>Appearance</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>{t.appearance}</p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setTheme("light")}
@@ -543,7 +534,7 @@ export function AppSidebar({
                         }}
                       >
                         <Sun className="w-4 h-4" />
-                        Light
+                        {t.light}
                       </button>
                       <button
                         onClick={() => setTheme("dark")}
@@ -555,7 +546,7 @@ export function AppSidebar({
                         }}
                       >
                         <Moon className="w-4 h-4" />
-                        Dark
+                        {t.dark}
                       </button>
                     </div>
                   </div>
@@ -566,18 +557,18 @@ export function AppSidebar({
               {settingsSection === "account" && (
                 <div className="p-6 space-y-6">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: MUTFG }}>Email address</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: MUTFG }}>{t.emailAddress}</p>
                     <p className="text-sm mb-3" style={{ color: FG }}>{user?.email}</p>
                     <form onSubmit={handleEmailChange} className="space-y-2">
-                      <Input type="email" placeholder="New email address" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="h-9 text-sm" />
-                      <Input type="password" placeholder="Current password to confirm" value={emailConfirmPass} onChange={e => setEmailConfirmPass(e.target.value)} className="h-9 text-sm" />
+                      <Input type="email" placeholder={t.newEmailAddress} value={newEmail} onChange={e => setNewEmail(e.target.value)} className="h-9 text-sm" />
+                      <Input type="password" placeholder={t.emailConfirmPass} value={emailConfirmPass} onChange={e => setEmailConfirmPass(e.target.value)} className="h-9 text-sm" />
                       <button
                         type="submit"
                         disabled={emailLoading || !newEmail.trim() || !emailConfirmPass}
                         className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
                         style={{ backgroundColor: FG, color: BG }}
                       >
-                        {emailLoading ? "Updating…" : "Update email"}
+                        {emailLoading ? t.updating : t.updateEmail}
                       </button>
                     </form>
                   </div>
@@ -585,18 +576,18 @@ export function AppSidebar({
                   <div style={{ height: "1px", backgroundColor: BORDER }} />
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>Password</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>{t.password}</p>
                     <form onSubmit={handlePasswordChange} className="space-y-2">
-                      <Input type="password" placeholder="Current password" value={currentPass} onChange={e => setCurrentPass(e.target.value)} className="h-9 text-sm" />
-                      <Input type="password" placeholder="New password" value={newPass} onChange={e => setNewPass(e.target.value)} className="h-9 text-sm" />
-                      <Input type="password" placeholder="Confirm new password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} className="h-9 text-sm" />
+                      <Input type="password" placeholder={t.currentPassword} value={currentPass} onChange={e => setCurrentPass(e.target.value)} className="h-9 text-sm" />
+                      <Input type="password" placeholder={t.newPassword} value={newPass} onChange={e => setNewPass(e.target.value)} className="h-9 text-sm" />
+                      <Input type="password" placeholder={t.confirmNewPassword} value={confirmPass} onChange={e => setConfirmPass(e.target.value)} className="h-9 text-sm" />
                       <button
                         type="submit"
                         disabled={passLoading || !currentPass || !newPass || !confirmPass}
                         className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
                         style={{ backgroundColor: FG, color: BG }}
                       >
-                        {passLoading ? "Updating…" : "Update password"}
+                        {passLoading ? t.updating : t.updatePassword}
                       </button>
                     </form>
                   </div>
@@ -604,35 +595,33 @@ export function AppSidebar({
                   <div style={{ height: "1px", backgroundColor: BORDER }} />
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: MUTFG }}>Sessions</p>
-                    <p className="text-xs mb-3" style={{ color: MUTFG }}>Ends your current session on all devices.</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: MUTFG }}>{t.sessions}</p>
+                    <p className="text-xs mb-3" style={{ color: MUTFG }}>{t.endsSession}</p>
                     <button
                       onClick={handleLogout}
                       className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
                       style={{ color: FG, borderColor: BORDER, backgroundColor: "transparent" }}
                     >
-                      Log out of all devices
+                      {t.logOutAllDevices}
                     </button>
                   </div>
 
                   <div style={{ height: "1px", backgroundColor: BORDER }} />
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "hsl(var(--destructive))" }}>Danger zone</p>
-                    <p className="text-xs mb-3" style={{ color: MUTFG }}>
-                      Permanently deletes your account and all data. This cannot be undone.
-                    </p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "hsl(var(--destructive))" }}>{t.dangerZone}</p>
+                    <p className="text-xs mb-3" style={{ color: MUTFG }}>{t.cantBeUndone}</p>
                     {!showDeleteConfirm ? (
                       <button
                         onClick={() => setShowDeleteConfirm(true)}
                         className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
                         style={{ color: "hsl(var(--destructive))", borderColor: "hsl(var(--destructive))", backgroundColor: "transparent" }}
                       >
-                        Delete account
+                        {t.deleteAccount}
                       </button>
                     ) : (
                       <div className="space-y-2">
-                        <Input type="password" placeholder="Enter your password to confirm" value={deletePass} onChange={e => setDeletePass(e.target.value)} className="h-9 text-sm" />
+                        <Input type="password" placeholder={t.enterPasswordConfirm} value={deletePass} onChange={e => setDeletePass(e.target.value)} className="h-9 text-sm" />
                         <div className="flex gap-2">
                           <button
                             onClick={handleDeleteAccount}
@@ -640,14 +629,14 @@ export function AppSidebar({
                             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
                             style={{ backgroundColor: "hsl(var(--destructive))", color: "hsl(var(--destructive-foreground))" }}
                           >
-                            {deleteLoading ? "Deleting…" : "Confirm delete"}
+                            {deleteLoading ? t.deleting : t.confirmDelete}
                           </button>
                           <button
                             onClick={() => { setShowDeleteConfirm(false); setDeletePass(""); }}
                             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                             style={{ color: MUTFG, backgroundColor: MUT }}
                           >
-                            Cancel
+                            {t.cancel}
                           </button>
                         </div>
                       </div>
@@ -659,22 +648,22 @@ export function AppSidebar({
               {/* ── BILLING ── */}
               {settingsSection === "billing" && (
                 <div className="p-6">
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: MUTFG }}>Subscription</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: MUTFG }}>{t.subscription}</p>
                   <div className="rounded-xl p-4 border mb-4" style={{ borderColor: BORDER, backgroundColor: MUT }}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium" style={{ color: FG }}>Current plan</p>
+                        <p className="text-sm font-medium" style={{ color: FG }}>{t.currentPlan}</p>
                         <p className="text-xs mt-0.5" style={{ color: MUTFG }}>{planLabel || "Free"}</p>
                       </div>
                       <button
                         className="px-3 py-1.5 rounded-lg text-xs font-medium"
                         style={{ backgroundColor: FG, color: BG }}
                       >
-                        Upgrade
+                        {t.upgrade}
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs" style={{ color: MUTFG }}>Billing management coming soon.</p>
+                  <p className="text-xs" style={{ color: MUTFG }}>{t.billingComingSoon}</p>
                 </div>
               )}
 
