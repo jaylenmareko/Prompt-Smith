@@ -6,7 +6,6 @@ import { eq, desc, and } from "drizzle-orm";
 const PLAN_LIMITS: Record<string, { daily: number | null; monthly: number | null }> = {
   free:      { daily: 10,   monthly: null },
   starter:   { daily: null, monthly: 500  },
-  pro:       { daily: null, monthly: 2000 },
   unlimited: { daily: null, monthly: null },
 };
 

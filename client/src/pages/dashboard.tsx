@@ -199,7 +199,7 @@ export default function DashboardPage() {
         if (isGuest) {
           wallText = "You've used your 10 free prompts for today. Sign up for free to keep your history, or come back tomorrow.";
         } else if (isMonthly) {
-          wallText = `You've used all your prompts for this month. Upgrade your plan to keep going, or check back next month.`;
+          wallText = "You've used all your prompts for this month. Upgrade to Unlimited to keep going, or check back next month.";
         } else {
           wallText = "You've used all 10 prompts for today. Upgrade for more, or check back tomorrow.";
         }
