@@ -55,6 +55,8 @@ export default function DashboardPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [detectedTool, setDetectedTool] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const isMutedRef = useRef(false);
   const [conversations, setConversations] = useState<LocalConversation[]>(getStoredConversations);
   const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(getStoredSavedPrompts);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -277,10 +279,16 @@ export default function DashboardPage() {
     setSaveDialogOpen(false);
   };
 
+  const stopVoice = () => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+    setIsMuted(false);
+    isMutedRef.current = false;
+  };
+
   const toggleVoice = () => {
     if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
+      stopVoice();
       return;
     }
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -293,6 +301,7 @@ export default function DashboardPage() {
     recognition.interimResults = true;
     recognition.lang = "en-US";
     recognition.onresult = (event: any) => {
+      if (isMutedRef.current) return;
       let transcript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
@@ -302,11 +311,20 @@ export default function DashboardPage() {
         return base + (base ? " " : "") + transcript;
       });
     };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => { setIsListening(false); setIsMuted(false); isMutedRef.current = false; };
+    recognition.onend = () => { setIsListening(false); setIsMuted(false); isMutedRef.current = false; };
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
+    setIsMuted(false);
+    isMutedRef.current = false;
+  };
+
+  const toggleMute = () => {
+    if (!isListening) return;
+    const next = !isMuted;
+    setIsMuted(next);
+    isMutedRef.current = next;
   };
 
   const hasMessages = messages.length > 0;
@@ -334,12 +352,14 @@ export default function DashboardPage() {
         }}
       />
       <button
-        onClick={toggleVoice}
+        onClick={toggleMute}
         data-testid={`button-mic${testIdSuffix}`}
-        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-        style={{ color: isListening ? "#d97706" : "#a8a29e" }}
+        disabled={!isListening}
+        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors disabled:opacity-30"
+        style={{ color: isMuted ? "#ef4444" : isListening ? "#1DB954" : "#a8a29e" }}
+        title={isListening ? (isMuted ? "Unmute" : "Mute") : "Start mic from the button below"}
       >
-        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </button>
       <button
         onClick={handleGenerate}
