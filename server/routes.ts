@@ -26,18 +26,6 @@ function detectTool(input: string): string | null {
   return null;
 }
 
-// Target word counts per tool — shorter prompts perform better in practice
-const TOOL_LENGTH: Record<string, string> = {
-  "Midjourney": "Keep it under 60 words. Use comma-separated descriptors, not sentences.",
-  "DALL·E":     "Keep it under 80 words. Dense visual descriptors, no filler.",
-  "Sora":       "Keep it under 100 words. Scene, movement, mood — no narration.",
-  "ChatGPT":    "Keep it under 200 words. Clear and focused.",
-  "Claude":     "Keep it under 200 words. Clear and focused.",
-  "Gemini":     "Keep it under 200 words. Clear and focused.",
-  "Cursor":     "Keep it under 300 words. Technical detail only — no fluff.",
-  "Replit":     "Keep it under 300 words. Technical detail only — no fluff.",
-};
-
 function getSystemPrompt(targetTool: string): string {
   const toolInstructions: Record<string, string> = {
     "ChatGPT":    "Use a clear role, task, and output format. Be direct.",
@@ -51,21 +39,20 @@ function getSystemPrompt(targetTool: string): string {
   };
 
   const specific = toolInstructions[targetTool] || toolInstructions["ChatGPT"];
-  const lengthRule = TOOL_LENGTH[targetTool] || "Keep it under 200 words.";
 
-  return `You are Prompt Smith, an expert AI prompt engineer. Your job is to take a user's plain-language description and generate a concise, optimized prompt for ${targetTool}.
+  return `You are Prompt Smith, an expert AI prompt engineer. Your job is to take a user's plain-language description and generate an optimized prompt for ${targetTool}.
 
 CRITICAL RULES:
 - Return ONLY the prompt text — nothing else
 - No preamble, no explanation, no "Here's your prompt:" prefix
 - No markdown formatting or code blocks
 - The output must be directly copy-pasteable into ${targetTool}
-- LENGTH: ${lengthRule} Shorter, focused prompts outperform long ones.
+- LENGTH: Write exactly as much as the request needs — no more, no less. A simple request deserves a short prompt. A complex request deserves a detailed one. Never pad, never cut corners.
 
 TOOL-SPECIFIC FORMAT for ${targetTool}:
 ${specific}
 
-Write the most effective prompt possible. Prioritize clarity and specificity over length.`;
+Write the most effective prompt possible. Let the complexity of the request determine the length.`;
 }
 
 export async function registerRoutes(
