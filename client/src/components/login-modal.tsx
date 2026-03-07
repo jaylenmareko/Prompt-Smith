@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -12,6 +12,15 @@ interface LoginModalProps {
 
 export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginModalProps) {
   const [isSignup, setIsSignup] = useState(defaultMode === "signup");
+
+  useEffect(() => {
+    if (open) {
+      setIsSignup(defaultMode === "signup");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+    }
+  }, [open, defaultMode]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

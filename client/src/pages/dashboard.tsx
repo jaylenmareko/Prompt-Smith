@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
+import { queryClient } from "@/lib/queryClient";
 import { AppSidebar } from "@/components/app-sidebar";
 import { LoginModal } from "@/components/login-modal";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -19,6 +20,17 @@ import { Mic, Send, Copy, Bookmark, Loader2, Sparkles, User, X } from "lucide-re
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
+
+const LANG_CODES: Record<string, string> = {
+  "English":   "en-US",
+  "Español":   "es-ES",
+  "Français":  "fr-FR",
+  "Deutsch":   "de-DE",
+  "Português": "pt-BR",
+  "日本語":    "ja-JP",
+  "中文":      "zh-CN",
+  "한국어":    "ko-KR",
+};
 
 const STORAGE_KEYS = {
   conversations: "ps_conversations",
@@ -42,7 +54,7 @@ function getStoredSavedPrompts(): LocalSavedPrompt[] {
 export default function DashboardPage() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -266,6 +278,7 @@ export default function DashboardPage() {
         { id: assistantMsgId, role: "assistant", content: fullContent, targetTool: tool, isStreaming: false },
       ];
       persistConversation(convId, title, finalMessages);
+      if (user) queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
 
 
     } catch (error: any) {
@@ -329,7 +342,7 @@ export default function DashboardPage() {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = LANG_CODES[lang] ?? "en-US";
     recognition.onresult = (event: any) => {
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -413,6 +426,29 @@ export default function DashboardPage() {
     </div>
   );
 
+  const usageWarning = () => {
+    if (!user) return null;
+    const today = new Date().toISOString().split("T")[0];
+    const thisMonth = new Date().toISOString().substring(0, 7);
+    const dailyUsed = user.lastResetDate === today ? user.promptsUsedToday : 0;
+    const monthlyUsed = user.lastMonthlyReset === thisMonth ? user.promptsUsedMonth : 0;
+
+    let text: string | null = null;
+    if (user.plan === "free" && dailyUsed >= 3) {
+      const remaining = Math.max(0, 5 - dailyUsed);
+      text = remaining === 0 ? "No prompts left today" : `${remaining} prompt${remaining === 1 ? "" : "s"} left today`;
+    } else if (user.plan === "starter" && monthlyUsed >= 450) {
+      const remaining = Math.max(0, 500 - monthlyUsed);
+      text = remaining === 0 ? "No prompts left this month" : `${remaining} prompt${remaining === 1 ? "" : "s"} left this month`;
+    }
+    if (!text) return null;
+    return (
+      <p className="text-center text-[11px] mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+        {text}
+      </p>
+    );
+  };
+
   const platformHint = (compact = false) => (
     <p
       className={`text-center ${compact ? "mt-2 text-[11px]" : "mt-3 text-xs"}`}
@@ -476,6 +512,7 @@ export default function DashboardPage() {
               activeConversationId={currentConvId}
               onDeleteConversation={deleteConversation}
               onDeleteSavedPrompt={deleteSavedPrompt}
+              onOpenLogin={openLogin}
               user={user}
             />
           </div>
@@ -572,6 +609,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="w-full max-w-2xl">
+                  {usageWarning()}
                   {inputBox("")}
                   {platformHint()}
                   {toolPills("welcome")}
@@ -707,6 +745,7 @@ export default function DashboardPage() {
 
                 <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid hsl(var(--border))" }}>
                   <div className="max-w-2xl mx-auto">
+                    {usageWarning()}
                     {inputBox("-chat", isGenerating)}
                     {platformHint(true)}
                     {toolPills("chat", true)}

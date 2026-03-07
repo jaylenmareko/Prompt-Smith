@@ -25,8 +25,7 @@ const THEME_KEY = "ps_theme";
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
-  pro: "Pro",
-  max: "Max",
+  unlimited: "Unlimited",
 };
 
 type SettingsSection = "general" | "account" | "billing";
@@ -40,6 +39,7 @@ interface AppSidebarProps {
   activeConversationId: string | null;
   onDeleteConversation: (id: string) => void;
   onDeleteSavedPrompt: (id: string) => void;
+  onOpenLogin: (mode: "login" | "signup") => void;
   user: Profile | null | undefined;
 }
 
@@ -52,6 +52,7 @@ export function AppSidebar({
   activeConversationId,
   onDeleteConversation,
   onDeleteSavedPrompt,
+  onOpenLogin,
   user,
 }: AppSidebarProps) {
   const [, setLocation] = useLocation();
@@ -128,7 +129,6 @@ export function AppSidebar({
   const handleLogout = async () => {
     setMenuOpen(false);
     await logout();
-    setLocation("/login");
   };
 
   const handleEmailChange = async (e: React.FormEvent) => {
@@ -194,7 +194,6 @@ export function AppSidebar({
       if (!res.ok) throw new Error(data.message);
       setSettingsOpen(false);
       await logout();
-      setLocation("/login");
     } catch (err: any) {
       toast({ title: "Failed to delete account", description: err.message, variant: "destructive" });
     } finally {
@@ -454,14 +453,14 @@ export function AppSidebar({
           ) : (
             <div className="flex flex-col gap-2 px-1">
               <button
-                onClick={() => setLocation("/login?mode=signup")}
+                onClick={() => onOpenLogin("signup")}
                 className="w-full text-xs py-2 rounded-xl font-medium transition-colors"
                 style={{ backgroundColor: FG, color: BG }}
               >
                 {t.signUpFree}
               </button>
               <button
-                onClick={() => setLocation("/login")}
+                onClick={() => onOpenLogin("login")}
                 className="w-full text-xs py-2 rounded-xl font-medium flex items-center justify-center gap-1.5"
                 style={{ color: FG, border: `1px solid ${BORDER}` }}
               >
