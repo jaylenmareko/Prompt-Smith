@@ -59,6 +59,7 @@ export function AppSidebar({
   const [menuOpen, setMenuOpen] = useState(false);
   const [langExpanded, setLangExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchPrompts, setSearchPrompts] = useState("");
   const [selectedLang, setSelectedLang] = useState(
     () => localStorage.getItem(LANG_KEY) || "English"
   );
@@ -149,6 +150,20 @@ export function AppSidebar({
               style={{ color: "#18181b" }}
             />
           </div>
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg"
+            style={{ backgroundColor: "#f5f5f4" }}
+          >
+            <Search className="w-4 h-4 shrink-0" style={{ color: "#a8a29e" }} />
+            <input
+              type="text"
+              value={searchPrompts}
+              onChange={e => setSearchPrompts(e.target.value)}
+              placeholder="Search saved prompts"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
+              style={{ color: "#18181b" }}
+            />
+          </div>
         </div>
 
         {/* Content */}
@@ -160,12 +175,19 @@ export function AppSidebar({
               <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
                 Saved
               </p>
-              {savedPrompts.length === 0 ? (
-                <div className="px-3 py-4 text-center">
-                  <p className="text-xs" style={{ color: "#a8a29e" }}>No saved prompts yet</p>
-                </div>
-              ) : (
-                savedPrompts.map(prompt => (
+              {(() => {
+                const filtered = searchPrompts.trim()
+                  ? savedPrompts.filter(p =>
+                      p.name.toLowerCase().includes(searchPrompts.toLowerCase()) ||
+                      p.targetTool.toLowerCase().includes(searchPrompts.toLowerCase()))
+                  : savedPrompts;
+                return filtered.length === 0 ? (
+                  <div className="px-3 py-4 text-center">
+                    <p className="text-xs" style={{ color: "#a8a29e" }}>
+                      {searchPrompts ? "No matching prompts" : "No saved prompts yet"}
+                    </p>
+                  </div>
+                ) : filtered.map(prompt => (
                   <button
                     key={prompt.id}
                     onClick={() => onSelectSavedPrompt(prompt)}
@@ -189,8 +211,8 @@ export function AppSidebar({
                       </span>
                     </div>
                   </button>
-                ))
-              )}
+                ));
+              })()}
             </div>
 
             {/* Chats section */}
