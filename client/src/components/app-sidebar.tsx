@@ -117,13 +117,14 @@ export function AppSidebar({
       >
         {/* Header */}
         <div className="px-3 pt-4 pb-1 flex-shrink-0 flex items-center justify-between">
-          <h1
-            className="text-sm font-semibold tracking-wide px-1"
+          <button
+            onClick={onNewChat}
+            className="text-sm font-semibold tracking-wide px-1 hover:opacity-70 transition-opacity"
             style={{ color: "#18181b" }}
             data-testid="text-sidebar-logo"
           >
             Prompt Smith
-          </h1>
+          </button>
           <SidebarTrigger className="w-8 h-8 text-stone-400 hover:bg-stone-100 rounded-lg" />
         </div>
 
