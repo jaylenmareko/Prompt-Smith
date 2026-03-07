@@ -7,12 +7,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Bookmark, Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap } from "lucide-react";
+import { MessageSquare, Bookmark, Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, SquarePen } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
 import type { Profile } from "@shared/schema";
@@ -55,7 +54,6 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [, setLocation] = useLocation();
   const { logout } = useAuth();
-  const [activeTab, setActiveTab] = useState("saved");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [displayName, setDisplayName] = useState(
@@ -133,121 +131,107 @@ export function AppSidebar({
         style={{ backgroundColor: "#ffffff", borderRight: "1px solid #e5e2dd", width: "100%" }}
       >
         {/* Header */}
-        <div className="px-4 pt-5 pb-3 flex-shrink-0">
+        <div className="px-3 pt-4 pb-2 flex-shrink-0 flex items-center justify-between">
           <h1
-            className="text-sm font-semibold tracking-wide"
+            className="text-sm font-semibold tracking-wide px-1"
             style={{ color: "#18181b" }}
             data-testid="text-sidebar-logo"
           >
             Prompt Smith
           </h1>
+          <button
+            onClick={onNewChat}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-stone-100"
+            style={{ color: "#78716c" }}
+            title="New chat"
+          >
+            <SquarePen className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden px-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList
-              className="w-full grid grid-cols-2 h-8 rounded-lg border-0"
-              style={{ backgroundColor: "#f0ece8" }}
-            >
-              <TabsTrigger
-                value="saved"
-                data-testid="tab-saved-prompts"
-                className="text-xs rounded-md data-[state=active]:bg-white data-[state=active]:text-stone-800 data-[state=inactive]:text-stone-400"
-              >
-                <Bookmark className="w-3 h-3 mr-1.5" />
+        <ScrollArea className="flex-1 px-2">
+          <div className="pb-4">
+
+            {/* Saved Prompts section */}
+            <div className="mt-3">
+              <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
                 Saved
-              </TabsTrigger>
-              <TabsTrigger
-                value="chats"
-                data-testid="tab-chats"
-                className="text-xs rounded-md data-[state=active]:bg-white data-[state=active]:text-stone-800 data-[state=inactive]:text-stone-400"
-              >
-                <MessageSquare className="w-3 h-3 mr-1.5" />
+              </p>
+              {savedPrompts.length === 0 ? (
+                <div className="px-3 py-4 text-center">
+                  <p className="text-xs" style={{ color: "#a8a29e" }}>No saved prompts yet</p>
+                </div>
+              ) : (
+                savedPrompts.map(prompt => (
+                  <button
+                    key={prompt.id}
+                    onClick={() => onSelectSavedPrompt(prompt)}
+                    data-testid={`saved-prompt-${prompt.id}`}
+                    className="group w-full text-left py-2 px-3 rounded-lg hover:bg-stone-100 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm truncate" style={{ color: "#18181b" }}>
+                          {prompt.name}
+                        </p>
+                        <p className="text-xs truncate mt-0.5" style={{ color: "#a8a29e" }}>
+                          {prompt.targetTool}
+                        </p>
+                      </div>
+                      <span
+                        onClick={e => { e.stopPropagation(); onDeleteSavedPrompt(prompt.id); }}
+                        className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer p-1 rounded hover:bg-stone-200"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" style={{ color: "#a8a29e" }} />
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+
+            {/* Chats section */}
+            <div className="mt-4">
+              <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
                 Chats
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="saved" className="mt-3">
-              <ScrollArea className="h-[calc(100vh-180px)]">
-                <div className="space-y-0.5">
-                  {savedPrompts.length === 0 ? (
-                    <div className="px-3 py-8 text-center">
-                      <Bookmark className="w-5 h-5 mx-auto mb-2" style={{ color: "#e8dcc8" }} />
-                      <p className="text-xs" style={{ color: "#a8a29e" }}>No saved prompts yet</p>
-                    </div>
-                  ) : (
-                    savedPrompts.map(prompt => (
-                      <button
-                        key={prompt.id}
-                        onClick={() => onSelectSavedPrompt(prompt)}
-                        data-testid={`saved-prompt-${prompt.id}`}
-                        className="group w-full text-left py-2.5 px-3 rounded-lg hover:bg-stone-100 transition-colors"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium truncate" style={{ color: "#18181b" }}>
-                              {prompt.name}
-                            </p>
-                            <p className="text-[10px] truncate mt-0.5" style={{ color: "#1c1a17" }}>
-                              {prompt.targetTool}
-                            </p>
-                          </div>
-                          <span
-                            onClick={e => { e.stopPropagation(); onDeleteSavedPrompt(prompt.id); }}
-                            className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer"
-                          >
-                            <Trash2 className="w-3 h-3" style={{ color: "#a8a29e" }} />
-                          </span>
-                        </div>
-                      </button>
-                    ))
-                  )}
+              </p>
+              {conversations.length === 0 ? (
+                <div className="px-3 py-4 text-center">
+                  <p className="text-xs" style={{ color: "#a8a29e" }}>No chats yet</p>
                 </div>
-              </ScrollArea>
-            </TabsContent>
-
-            <TabsContent value="chats" className="mt-3">
-              <ScrollArea className="h-[calc(100vh-180px)]">
-                <div className="space-y-0.5">
-                  {conversations.length === 0 ? (
-                    <div className="px-3 py-8 text-center">
-                      <MessageSquare className="w-5 h-5 mx-auto mb-2" style={{ color: "#e8dcc8" }} />
-                      <p className="text-xs" style={{ color: "#a8a29e" }}>No chats yet</p>
-                    </div>
-                  ) : (
-                    conversations.map(conv => (
-                      <button
-                        key={conv.id}
-                        onClick={() => onSelectConversation(conv.id)}
-                        data-testid={`conversation-${conv.id}`}
-                        className="group w-full text-left py-2.5 px-3 rounded-lg transition-colors"
-                        style={{
-                          backgroundColor: activeConversationId === conv.id ? "#e5e2dd" : "transparent",
-                        }}
+              ) : (
+                conversations.map(conv => (
+                  <button
+                    key={conv.id}
+                    onClick={() => onSelectConversation(conv.id)}
+                    data-testid={`conversation-${conv.id}`}
+                    className="group w-full text-left py-2 px-3 rounded-lg transition-colors"
+                    style={{
+                      backgroundColor: activeConversationId === conv.id ? "#f0ece8" : "transparent",
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p
+                        className="text-sm truncate flex-1"
+                        style={{ color: activeConversationId === conv.id ? "#1c1a17" : "#44403c" }}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <p
-                            className="text-xs truncate flex-1"
-                            style={{ color: activeConversationId === conv.id ? "#1c1a17" : "#44403c" }}
-                          >
-                            {conv.title}
-                          </p>
-                          <span
-                            onClick={e => { e.stopPropagation(); onDeleteConversation(conv.id); }}
-                            className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer"
-                          >
-                            <Trash2 className="w-3 h-3" style={{ color: "#a8a29e" }} />
-                          </span>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
-        </div>
+                        {conv.title}
+                      </p>
+                      <span
+                        onClick={e => { e.stopPropagation(); onDeleteConversation(conv.id); }}
+                        className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer p-1 rounded hover:bg-stone-200"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" style={{ color: "#a8a29e" }} />
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+
+          </div>
+        </ScrollArea>
 
         {/* Footer */}
         <div
