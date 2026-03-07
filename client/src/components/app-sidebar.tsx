@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, Plus, Search } from "lucide-react";
+import { Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, Plus, Search, Bookmark, MessageSquare } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
 import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
@@ -175,13 +175,13 @@ export function AppSidebar({
             <div className="mt-3">
               <button
                 onClick={() => setSavedOpen(o => !o)}
-                className="w-full flex items-center justify-between px-3 py-1 rounded-lg hover:bg-stone-100 transition-colors group"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-stone-100"
+                style={{ color: "#44403c" }}
               >
-                <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
-                  Saved
-                </span>
+                <Bookmark className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                <span className="flex-1 text-left">Saved</span>
                 <ChevronRight
-                  className="w-3.5 h-3.5 transition-transform"
+                  className="w-4 h-4 shrink-0 transition-transform"
                   style={{ color: "#a8a29e", transform: savedOpen ? "rotate(90deg)" : "rotate(0deg)" }}
                 />
               </button>
@@ -227,9 +227,10 @@ export function AppSidebar({
 
             {/* Chats section */}
             <div className="mt-4">
-              <p className="px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#a8a29e" }}>
+              <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium" style={{ color: "#44403c" }}>
+                <MessageSquare className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
                 Chats
-              </p>
+              </div>
               {(() => {
                 const filtered = searchQuery.trim()
                   ? conversations.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
