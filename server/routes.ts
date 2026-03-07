@@ -162,6 +162,27 @@ export async function registerRoutes(
       const { input, targetTool: selectedTool } = req.body;
       if (!input) return res.status(400).json({ message: "Input is required" });
 
+      const GUEST_DAILY_LIMIT = 10;
+      const sess = req.session as any;
+
+      if (req.isAuthenticated()) {
+        const result = await storage.checkAndIncrementUsage((req.user as any).id);
+        if (!result.allowed) {
+          return res.status(429).json({ limitReached: true, reason: result.reason, plan: result.plan });
+        }
+      } else {
+        // Guest: track daily usage in session
+        const today = new Date().toISOString().split("T")[0];
+        if (sess.guestLastReset !== today) {
+          sess.guestPromptsToday = 0;
+          sess.guestLastReset = today;
+        }
+        if ((sess.guestPromptsToday || 0) >= GUEST_DAILY_LIMIT) {
+          return res.status(429).json({ limitReached: true, reason: "daily", plan: "guest" });
+        }
+        sess.guestPromptsToday = (sess.guestPromptsToday || 0) + 1;
+      }
+
       const detectedTool = detectTool(input);
       const finalTool = detectedTool || selectedTool || "ChatGPT";
 

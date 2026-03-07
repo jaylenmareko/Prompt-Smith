@@ -191,6 +191,28 @@ export default function DashboardPage() {
         body: JSON.stringify({ input: userInput, targetTool: selectedTool }),
       });
 
+      if (res.status === 429) {
+        const err = await res.json();
+        const isGuest = !user;
+        const isMonthly = err.reason === "monthly";
+        let wallText = "";
+        if (isGuest) {
+          wallText = "You've used your 10 free prompts for today. Sign up for free to keep your history, or come back tomorrow.";
+        } else if (isMonthly) {
+          wallText = `You've used all your prompts for this month. Upgrade your plan to keep going, or check back next month.`;
+        } else {
+          wallText = "You've used all 10 prompts for today. Upgrade for more, or check back tomorrow.";
+        }
+        setMessages(prev => prev.filter(m => m.id !== assistantMsgId));
+        setMessages(prev => [...prev, {
+          id: genId(),
+          role: "wall" as any,
+          content: wallText,
+          isGuest,
+        }]);
+        return;
+      }
+
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message);
@@ -569,7 +591,44 @@ export default function DashboardPage() {
               <>
                 <ScrollArea className="flex-1 px-4 md:px-0">
                   <div className="max-w-2xl mx-auto py-6 space-y-6">
-                    {messages.map((msg, index) => (
+                    {messages.map((msg, index) => msg.role === ("wall" as any) ? (
+                      <div key={msg.id} className="flex justify-center">
+                        <div
+                          className="rounded-2xl px-5 py-4 text-sm text-center max-w-sm"
+                          style={{ backgroundColor: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}
+                        >
+                          <p className="mb-3 leading-relaxed" style={{ color: "hsl(var(--foreground))" }}>
+                            {msg.content}
+                          </p>
+                          {(msg as any).isGuest ? (
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => openLogin("signup")}
+                                className="text-xs px-4 py-2 rounded-lg font-medium"
+                                style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
+                              >
+                                Sign up free
+                              </button>
+                              <button
+                                onClick={() => openLogin("login")}
+                                className="text-xs px-4 py-2 rounded-lg font-medium border"
+                                style={{ color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--border))" }}
+                              >
+                                Log in
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setSidebarOpen(true)}
+                              className="text-xs px-4 py-2 rounded-lg font-medium"
+                              style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
+                            >
+                              View plans
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
                       <div
                         key={msg.id}
                         className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}

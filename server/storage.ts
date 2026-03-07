@@ -3,11 +3,19 @@ import { profiles, conversations, chatMessages, savedPrompts } from "@shared/sch
 import type { Profile, InsertProfile, Conversation, ChatMessage, SavedPrompt } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 
+const PLAN_LIMITS: Record<string, { daily: number | null; monthly: number | null }> = {
+  free:      { daily: 10,   monthly: null },
+  starter:   { daily: null, monthly: 500  },
+  pro:       { daily: null, monthly: 2000 },
+  unlimited: { daily: null, monthly: null },
+};
+
 export interface IStorage {
   getProfile(id: number): Promise<Profile | undefined>;
   getProfileByEmail(email: string): Promise<Profile | undefined>;
   createProfile(email: string, hashedPassword: string): Promise<Profile>;
   updateProfile(id: number, data: Partial<Profile>): Promise<Profile>;
+  checkAndIncrementUsage(id: number): Promise<{ allowed: boolean; reason?: "daily" | "monthly"; plan: string }>;
   incrementPromptUsage(id: number): Promise<void>;
   resetDailyUsage(id: number): Promise<void>;
   resetMonthlyUsage(id: number): Promise<void>;
@@ -56,6 +64,35 @@ export class DatabaseStorage implements IStorage {
   async updateProfile(id: number, data: Partial<Profile>): Promise<Profile> {
     const [profile] = await db.update(profiles).set(data).where(eq(profiles.id, id)).returning();
     return profile;
+  }
+
+  async checkAndIncrementUsage(id: number): Promise<{ allowed: boolean; reason?: "daily" | "monthly"; plan: string }> {
+    const profile = await this.getProfile(id);
+    if (!profile) return { allowed: false, plan: "free" };
+
+    const today = new Date().toISOString().split("T")[0];
+    const currentMonth = today.substring(0, 7);
+
+    let dailyCount = profile.lastResetDate !== today ? 0 : profile.promptsUsedToday;
+    let monthlyCount = profile.lastMonthlyReset !== currentMonth ? 0 : profile.promptsUsedMonth;
+
+    const limits = PLAN_LIMITS[profile.plan] ?? PLAN_LIMITS.free;
+
+    if (limits.daily !== null && dailyCount >= limits.daily) {
+      return { allowed: false, reason: "daily", plan: profile.plan };
+    }
+    if (limits.monthly !== null && monthlyCount >= limits.monthly) {
+      return { allowed: false, reason: "monthly", plan: profile.plan };
+    }
+
+    await db.update(profiles).set({
+      promptsUsedToday: dailyCount + 1,
+      promptsUsedMonth: monthlyCount + 1,
+      lastResetDate: today,
+      lastMonthlyReset: currentMonth,
+    }).where(eq(profiles.id, id));
+
+    return { allowed: true, plan: profile.plan };
   }
 
   async incrementPromptUsage(id: number): Promise<void> {
