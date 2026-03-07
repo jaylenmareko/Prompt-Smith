@@ -86,7 +86,7 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent
-        className="sm:max-w-sm p-0 overflow-hidden"
+        className="sm:max-w-sm p-0 overflow-y-auto max-h-[90dvh]"
         style={{ borderRadius: "16px", border: "1px solid hsl(var(--border))" }}
       >
         <div className="px-8 py-10">
