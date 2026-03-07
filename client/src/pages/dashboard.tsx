@@ -479,13 +479,13 @@ export default function DashboardPage() {
                   data-testid="button-mic-center"
                   className="w-20 h-20 rounded-full flex items-center justify-center mb-10 transition-all duration-300"
                   style={{
-                    backgroundColor: isListening ? "#d97706" : "#f0ece8",
-                    border: `2px solid ${isListening ? "#d97706" : "#e5e2dd"}`,
+                    backgroundColor: isListening ? "#1DB954" : "#f0ece8",
+                    border: `2px solid ${isListening ? "#1DB954" : "#e5e2dd"}`,
                   }}
                 >
                   {isListening
                     ? <MicOff className="w-8 h-8" style={{ color: "#ffffff" }} />
-                    : <Mic className="w-8 h-8" style={{ color: "#78716c" }} />}
+                    : <Mic className="w-8 h-8" style={{ color: "#1DB954" }} />}
                 </button>
 
                 <div className="w-full max-w-2xl">
