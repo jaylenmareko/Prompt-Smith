@@ -453,7 +453,7 @@ export default function DashboardPage() {
             className="flex items-center gap-2 px-4 h-12 shrink-0"
             style={{ borderBottom: "1px solid #e5e2dd", backgroundColor: "#faf8f5" }}
           >
-            <SidebarTrigger className="text-stone-400" />
+            {!sidebarOpen && <SidebarTrigger className="text-stone-400" />}
             {detectedTool && hasMessages && (
               <span
                 className="text-xs px-2 py-0.5 rounded-full"

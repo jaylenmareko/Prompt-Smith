@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Bookmark, Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, SquarePen } from "lucide-react";
+import { Trash2, Settings, User, LogIn, LogOut, ChevronRight, Globe, Zap, Menu } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
 import type { LocalConversation, LocalSavedPrompt } from "@/lib/types";
 import type { Profile } from "@shared/schema";
@@ -112,7 +113,7 @@ export function AppSidebar({
         style={{ backgroundColor: "#ffffff", borderRight: "1px solid #e5e2dd", width: "100%" }}
       >
         {/* Header */}
-        <div className="px-3 pt-4 pb-2 flex-shrink-0 flex items-center justify-between">
+        <div className="px-3 pt-4 pb-1 flex-shrink-0 flex items-center justify-between">
           <h1
             className="text-sm font-semibold tracking-wide px-1"
             style={{ color: "#18181b" }}
@@ -120,13 +121,17 @@ export function AppSidebar({
           >
             Prompt Smith
           </h1>
+          <SidebarTrigger className="w-8 h-8 text-stone-400 hover:bg-stone-100 rounded-lg" />
+        </div>
+
+        {/* New chat text button */}
+        <div className="px-3 pt-1 pb-2 flex-shrink-0">
           <button
             onClick={onNewChat}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-stone-100"
-            style={{ color: "#78716c" }}
-            title="New chat"
+            className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-stone-100"
+            style={{ color: "#44403c" }}
           >
-            <SquarePen className="w-4 h-4" />
+            New chat
           </button>
         </div>
 
