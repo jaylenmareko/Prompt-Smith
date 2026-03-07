@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const [isListening, setIsListening] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const isMutedRef = useRef(false);
+  const committedRef = useRef("");
   const [conversations, setConversations] = useState<LocalConversation[]>(getStoredConversations);
   const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(getStoredSavedPrompts);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -311,20 +312,27 @@ export default function DashboardPage() {
       toast({ title: "Voice not supported", description: "Use Chrome for voice input", variant: "destructive" });
       return;
     }
+
+    // Snapshot whatever is already typed as the committed base
+    committedRef.current = inputRef.current?.value.trim() ?? "";
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
     recognition.onresult = (event: any) => {
       if (isMutedRef.current) return;
-      let transcript = "";
+      let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+        const result = event.results[i];
+        if (result.isFinal) {
+          committedRef.current += (committedRef.current ? " " : "") + result[0].transcript.trim();
+        } else {
+          interim += result[0].transcript;
+        }
       }
-      setInputValue(prev => {
-        const base = prev.replace(/\s*\[listening\.\.\.\]\s*$/, "");
-        return base + (base ? " " : "") + transcript;
-      });
+      // Replace entire input value: committed finals + current interim preview
+      setInputValue(committedRef.current + (interim ? (committedRef.current ? " " : "") + interim : ""));
     };
     recognition.onerror = () => { setIsListening(false); setIsMuted(false); isMutedRef.current = false; };
     recognition.onend = () => { setIsListening(false); setIsMuted(false); isMutedRef.current = false; };
