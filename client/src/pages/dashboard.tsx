@@ -500,14 +500,14 @@ export default function DashboardPage() {
                     data-testid="button-mic-center"
                     className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
                     style={{
-                      backgroundColor: "#1DB954",
-                      border: "2px solid #1DB954",
+                      backgroundColor: "#ffffff",
+                      border: "2px solid #e5e5e5",
                       boxShadow: isListening
                         ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)"
                         : "0 2px 8px rgba(0,0,0,0.12)",
                     }}
                   >
-                    <Mic className="w-6 h-6" style={{ color: "#ffffff" }} />
+                    <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
                   </button>
 
                   {/* Speak hint — floats to the right of the mic */}
