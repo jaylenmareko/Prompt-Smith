@@ -34,8 +34,6 @@ interface AppSidebarProps {
   activeConversationId: string | null;
   onDeleteConversation: (id: string) => void;
   onDeleteSavedPrompt: (id: string) => void;
-  sidebarWidth: number;
-  onResize: (width: number) => void;
   user: Profile | null | undefined;
 }
 
@@ -48,8 +46,6 @@ export function AppSidebar({
   activeConversationId,
   onDeleteConversation,
   onDeleteSavedPrompt,
-  sidebarWidth,
-  onResize,
   user,
 }: AppSidebarProps) {
   const [, setLocation] = useLocation();
@@ -107,21 +103,6 @@ export function AppSidebar({
   };
 
   const avatarLetter = user?.email.charAt(0).toUpperCase() ?? "";
-
-  const startResize = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = sidebarWidth;
-    const onMove = (ev: MouseEvent) => {
-      onResize(Math.max(180, Math.min(480, startWidth + (ev.clientX - startX))));
-    };
-    const onUp = () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  };
 
   return (
     <>
@@ -354,12 +335,6 @@ export function AppSidebar({
           )}
         </div>
 
-        {/* Drag-to-resize handle */}
-        <div
-          onMouseDown={startResize}
-          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize z-10 transition-colors hover:bg-stone-300"
-          style={{ backgroundColor: "#e8dcc8" }}
-        />
       </div>
 
       {/* Settings modal */}

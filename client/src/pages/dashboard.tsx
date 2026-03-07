@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(272);
+  const SIDEBAR_WIDTH = 260;
   const [showNudge, setShowNudge] = useState(false);
 
   const [inputValue, setInputValue] = useState("");
@@ -423,7 +423,7 @@ export default function DashboardPage() {
       open={sidebarOpen}
       onOpenChange={setSidebarOpen}
       style={{
-        "--sidebar-width": `${sidebarWidth}px`,
+        "--sidebar-width": `${SIDEBAR_WIDTH}px`,
         "--sidebar-width-icon": "3rem",
       } as React.CSSProperties}
     >
@@ -431,9 +431,9 @@ export default function DashboardPage() {
         {/* Sidebar wrapper — collapses to 0 when closed so content fills the screen */}
         <div
           className="flex-shrink-0 overflow-hidden"
-          style={{ width: sidebarOpen ? sidebarWidth : 0, transition: "width 0.2s ease" }}
+          style={{ width: sidebarOpen ? SIDEBAR_WIDTH : 0, transition: "width 0.2s ease" }}
         >
-          <div style={{ width: sidebarWidth, height: "100%" }}>
+          <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
             <AppSidebar
               conversations={conversations}
               savedPrompts={savedPrompts}
@@ -443,8 +443,6 @@ export default function DashboardPage() {
               activeConversationId={currentConvId}
               onDeleteConversation={deleteConversation}
               onDeleteSavedPrompt={deleteSavedPrompt}
-              sidebarWidth={sidebarWidth}
-              onResize={setSidebarWidth}
               user={user}
             />
           </div>
