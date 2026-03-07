@@ -575,7 +575,7 @@ export default function DashboardPage() {
                           <div
                             className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words"
                             style={msg.role === "user"
-                              ? { backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))", borderBottomRightRadius: "4px" }
+                              ? { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderBottomRightRadius: "4px" }
                               : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderBottomLeftRadius: "4px" }
                             }
                           >
