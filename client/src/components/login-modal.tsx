@@ -1,26 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
-  const [isSignup, setIsSignup] = useState(() =>
-    new URLSearchParams(window.location.search).get("mode") === "signup"
-  );
+interface LoginModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultMode?: "login" | "signup";
+}
+
+export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginModalProps) {
+  const [isSignup, setIsSignup] = useState(defaultMode === "signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, register, user } = useAuth();
-  const [, setLocation] = useLocation();
+  const { login, register } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user) setLocation("/dashboard");
-  }, [user, setLocation]);
+  const reset = () => {
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setIsSubmitting(false);
+  };
 
-  if (user) return null;
+  const switchMode = (signup: boolean) => {
+    setIsSignup(signup);
+    setConfirmPassword("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +45,8 @@ export default function LoginPage() {
       } else {
         await login(email, password);
       }
-      setLocation("/dashboard");
+      reset();
+      onOpenChange(false);
     } catch (error: any) {
       toast({
         title: isSignup ? "Registration failed" : "Login failed",
@@ -62,40 +72,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: "hsl(var(--background))" }}
-    >
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <p
-            className="text-2xl font-semibold mb-1"
-            style={{ color: "hsl(var(--foreground))" }}
-            data-testid="text-logo"
-          >
-            Prompt Smith
-          </p>
-          <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-            {isSignup ? "Create your account" : "Welcome back"}
-          </p>
-        </div>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
+      <DialogContent
+        className="sm:max-w-sm p-0 overflow-hidden"
+        style={{ borderRadius: "16px", border: "1px solid hsl(var(--border))" }}
+      >
+        <div className="px-8 py-10">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <p className="text-2xl font-semibold mb-1" style={{ color: "hsl(var(--foreground))" }}>
+              Prompt Smith
+            </p>
+            <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+              {isSignup ? "Create your account" : "Welcome back"}
+            </p>
+          </div>
 
-        {/* Card */}
-        <div
-          className="rounded-2xl p-8"
-          style={{
-            backgroundColor: "hsl(var(--card))",
-            border: "1px solid hsl(var(--border))",
-          }}
-        >
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="email" className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+              <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
                 Email address
               </label>
               <input
-                id="email"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -108,11 +107,10 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="password" className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+              <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
                 Password
               </label>
               <input
-                id="password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -127,11 +125,10 @@ export default function LoginPage() {
 
             {isSignup && (
               <div className="space-y-1.5">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                <label className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
                   Confirm password
                 </label>
                 <input
-                  id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
@@ -152,7 +149,7 @@ export default function LoginPage() {
               style={{
                 width: "100%",
                 height: "44px",
-                marginTop: "8px",
+                marginTop: "4px",
                 borderRadius: "8px",
                 border: "none",
                 backgroundColor: "hsl(var(--foreground))",
@@ -171,21 +168,21 @@ export default function LoginPage() {
               {isSignup ? "Create account" : "Continue"}
             </button>
           </form>
-        </div>
 
-        {/* Toggle */}
-        <p className="text-center mt-5 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-          {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-          <button
-            onClick={() => { setIsSignup(!isSignup); setConfirmPassword(""); }}
-            data-testid="button-toggle-auth-mode"
-            className="font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
-            style={{ color: "hsl(var(--foreground))" }}
-          >
-            {isSignup ? "Sign in" : "Sign up"}
-          </button>
-        </p>
-      </div>
-    </div>
+          {/* Toggle */}
+          <p className="text-center mt-6 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button
+              onClick={() => switchMode(!isSignup)}
+              data-testid="button-toggle-auth-mode"
+              className="font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+              style={{ color: "hsl(var(--foreground))" }}
+            >
+              {isSignup ? "Sign in" : "Sign up"}
+            </button>
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

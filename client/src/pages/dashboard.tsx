@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { AppSidebar } from "@/components/app-sidebar";
+import { LoginModal } from "@/components/login-modal";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -41,11 +41,17 @@ function getStoredSavedPrompts(): LocalSavedPrompt[] {
 
 export default function DashboardPage() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [loginModalMode, setLoginModalMode] = useState<"login" | "signup">("login");
+
+  const openLogin = (mode: "login" | "signup" = "login") => {
+    setLoginModalMode(mode);
+    setLoginModalOpen(true);
+  };
   const SIDEBAR_WIDTH = 260;
   const [showNudge, setShowNudge] = useState(false);
 
@@ -472,14 +478,14 @@ export default function DashboardPage() {
             {!user && (
               <div className="ml-auto flex items-center gap-2">
                 <button
-                  onClick={() => setLocation("/login")}
+                  onClick={() => openLogin("login")}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
                   style={{ color: "hsl(var(--muted-foreground))" }}
                 >
                   {t.logIn}
                 </button>
                 <button
-                  onClick={() => setLocation("/login?mode=signup")}
+                  onClick={() => openLogin("signup")}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
                   style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
                 >
@@ -653,6 +659,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Login modal */}
+      <LoginModal
+        open={loginModalOpen}
+        onOpenChange={setLoginModalOpen}
+        defaultMode={loginModalMode}
+      />
+
       {/* Save dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent>
@@ -693,14 +706,14 @@ export default function DashboardPage() {
           </p>
           <div className="flex gap-2">
             <button
-              onClick={() => setLocation("/login")}
+              onClick={() => { setShowNudge(false); openLogin("login"); }}
               className="flex-1 text-xs py-1.5 rounded-lg font-medium border transition-colors"
               style={{ color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--border))" }}
             >
               {t.logIn}
             </button>
             <button
-              onClick={() => setLocation("/login?mode=signup")}
+              onClick={() => { setShowNudge(false); openLogin("signup"); }}
               className="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
               style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
             >
