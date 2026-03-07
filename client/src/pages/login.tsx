@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -20,9 +17,7 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      setLocation("/dashboard");
-    }
+    if (user) setLocation("/dashboard");
   }, [user, setLocation]);
 
   if (user) return null;
@@ -30,12 +25,10 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-
     if (isSignup && password !== confirmPassword) {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
     }
-
     setIsSubmitting(true);
     try {
       if (isSignup) {
@@ -55,120 +48,143 @@ export default function LoginPage() {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    height: "44px",
+    padding: "0 14px",
+    fontSize: "14px",
+    borderRadius: "8px",
+    border: "1px solid hsl(var(--border))",
+    backgroundColor: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0f0f0f" }}>
-      <div className="w-full max-w-md px-6">
-        <div className="text-center mb-10">
-          <h1
-            className="text-sm font-semibold tracking-[0.3em] uppercase mb-3"
-            style={{ color: "#d97706" }}
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ backgroundColor: "hsl(var(--background))" }}
+    >
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <p
+            className="text-2xl font-semibold mb-1"
+            style={{ color: "hsl(var(--foreground))" }}
             data-testid="text-logo"
           >
-            PromptForge
-          </h1>
-          <p className="text-2xl font-light" style={{ color: "#f0ece4" }}>
+            Prompt Smith
+          </p>
+          <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
             {isSignup ? "Create your account" : "Welcome back"}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm" style={{ color: "#f0ece4aa" }}>
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              data-testid="input-email"
-              className="h-11 border-0 text-sm"
-              style={{
-                backgroundColor: "#1a1a1a",
-                color: "#f0ece4",
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm" style={{ color: "#f0ece4aa" }}>
-              Password
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 6 characters"
-              required
-              minLength={6}
-              data-testid="input-password"
-              className="h-11 border-0 text-sm"
-              style={{
-                backgroundColor: "#1a1a1a",
-                color: "#f0ece4",
-              }}
-            />
-          </div>
-
-          {isSignup && (
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm" style={{ color: "#f0ece4aa" }}>
-                Confirm Password
-              </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
+        {/* Card */}
+        <div
+          className="rounded-2xl p-8"
+          style={{
+            backgroundColor: "hsl(var(--card))",
+            border: "1px solid hsl(var(--border))",
+          }}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
                 required
-                minLength={6}
-                data-testid="input-confirm-password"
-                className="h-11 border-0 text-sm"
-                style={{
-                  backgroundColor: "#1a1a1a",
-                  color: "#f0ece4",
-                }}
+                autoComplete="email"
+                data-testid="input-email"
+                style={inputStyle}
               />
             </div>
-          )}
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            data-testid="button-submit-auth"
-            className="w-full h-11 text-sm font-medium border-0"
-            style={{
-              backgroundColor: "#d97706",
-              color: "#0f0f0f",
-            }}
-          >
-            {isSubmitting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : isSignup ? (
-              "Create account"
-            ) : (
-              "Sign in"
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                required
+                minLength={6}
+                autoComplete={isSignup ? "new-password" : "current-password"}
+                data-testid="input-password"
+                style={inputStyle}
+              />
+            </div>
+
+            {isSignup && (
+              <div className="space-y-1.5">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                  Confirm password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat your password"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  data-testid="input-confirm-password"
+                  style={inputStyle}
+                />
+              </div>
             )}
-          </Button>
-        </form>
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => {
-              setIsSignup(!isSignup);
-              setConfirmPassword("");
-            }}
-            data-testid="button-toggle-auth-mode"
-            className="text-sm transition-colors"
-            style={{ color: "#d97706" }}
-          >
-            {isSignup ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
-          </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              data-testid="button-submit-auth"
+              style={{
+                width: "100%",
+                height: "44px",
+                marginTop: "8px",
+                borderRadius: "8px",
+                border: "none",
+                backgroundColor: "hsl(var(--foreground))",
+                color: "hsl(var(--background))",
+                fontSize: "14px",
+                fontWeight: 500,
+                cursor: isSubmitting ? "not-allowed" : "pointer",
+                opacity: isSubmitting ? 0.7 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
+            >
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSignup ? "Create account" : "Continue"}
+            </button>
+          </form>
         </div>
+
+        {/* Toggle */}
+        <p className="text-center mt-5 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+          {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+          <button
+            onClick={() => { setIsSignup(!isSignup); setConfirmPassword(""); }}
+            data-testid="button-toggle-auth-mode"
+            className="font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+            style={{ color: "hsl(var(--foreground))" }}
+          >
+            {isSignup ? "Sign in" : "Sign up"}
+          </button>
+        </p>
       </div>
     </div>
   );
