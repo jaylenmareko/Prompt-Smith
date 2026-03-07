@@ -99,6 +99,15 @@ export function AppSidebar({
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
+  // Apply saved theme on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "dark") {
+      document.documentElement.classList.add("dark");
+      setTheme("dark");
+    }
+  }, []);
+
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e: MouseEvent) => {
@@ -210,8 +219,8 @@ export function AppSidebar({
       onClick={() => setSettingsSection(s)}
       className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
       style={{
-        backgroundColor: settingsSection === s ? "#f0ece8" : "transparent",
-        color: settingsSection === s ? "#18181b" : "#78716c",
+        backgroundColor: settingsSection === s ? "hsl(var(--accent))" : "transparent",
+        color: settingsSection === s ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
         fontWeight: settingsSection === s ? 500 : 400,
       }}
     >
@@ -223,51 +232,55 @@ export function AppSidebar({
     <>
       <div
         className="flex flex-col h-full relative"
-        style={{ backgroundColor: "#ffffff", borderRight: "1px solid #e5e2dd", width: "100%" }}
+        style={{
+          backgroundColor: "hsl(var(--sidebar))",
+          borderRight: "1px solid hsl(var(--sidebar-border))",
+          width: "100%",
+        }}
       >
         {/* Header */}
         <div className="px-3 pt-4 pb-1 flex-shrink-0 flex items-center justify-between">
           <button
             onClick={onNewChat}
             className="text-sm font-semibold tracking-wide px-1 hover:opacity-70 transition-opacity"
-            style={{ color: "#18181b" }}
+            style={{ color: "hsl(var(--sidebar-foreground))" }}
             data-testid="text-sidebar-logo"
           >
             Prompt Smith
           </button>
-          <SidebarTrigger className="w-8 h-8 text-stone-400 hover:bg-stone-100 rounded-lg" />
+          <SidebarTrigger className="w-8 h-8 rounded-lg" style={{ color: "hsl(var(--muted-foreground))" }} />
         </div>
 
         {/* New chat + Search */}
         <div className="px-3 pt-1 pb-2 flex-shrink-0 space-y-1">
           <button
             onClick={onNewChat}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-stone-100"
-            style={{ color: "#44403c" }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-accent"
+            style={{ color: "hsl(var(--sidebar-foreground))" }}
           >
-            <Plus className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+            <Plus className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
             New chat
           </button>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: "#f5f5f4" }}>
-            <Search className="w-4 h-4 shrink-0" style={{ color: "#a8a29e" }} />
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: "hsl(var(--muted))" }}>
+            <Search className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search chats"
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
-              style={{ color: "#18181b" }}
+              className="flex-1 bg-transparent text-sm outline-none"
+              style={{ color: "hsl(var(--foreground))" }}
             />
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: "#f5f5f4" }}>
-            <Search className="w-4 h-4 shrink-0" style={{ color: "#a8a29e" }} />
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: "hsl(var(--muted))" }}>
+            <Search className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
             <input
               type="text"
               value={searchPrompts}
               onChange={e => setSearchPrompts(e.target.value)}
               placeholder="Search saved prompts"
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
-              style={{ color: "#18181b" }}
+              className="flex-1 bg-transparent text-sm outline-none"
+              style={{ color: "hsl(var(--foreground))" }}
             />
           </div>
         </div>
@@ -279,14 +292,17 @@ export function AppSidebar({
             <div className="mt-3">
               <button
                 onClick={() => setSavedOpen(o => !o)}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-stone-100"
-                style={{ color: "#44403c" }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-accent"
+                style={{ color: "hsl(var(--sidebar-foreground))" }}
               >
-                <Bookmark className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                <Bookmark className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
                 <span className="flex-1 text-left">Saved Prompts</span>
                 <ChevronRight
                   className="w-4 h-4 shrink-0 transition-transform"
-                  style={{ color: "#a8a29e", transform: savedOpen ? "rotate(90deg)" : "rotate(0deg)" }}
+                  style={{
+                    color: "hsl(var(--muted-foreground))",
+                    transform: savedOpen ? "rotate(90deg)" : "rotate(0deg)",
+                  }}
                 />
               </button>
               {savedOpen && (() => {
@@ -297,7 +313,7 @@ export function AppSidebar({
                   : savedPrompts;
                 return filtered.length === 0 ? (
                   <div className="px-3 py-3 text-center">
-                    <p className="text-xs" style={{ color: "#a8a29e" }}>
+                    <p className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
                       {searchPrompts ? "No matching prompts" : "No saved prompts yet"}
                     </p>
                   </div>
@@ -306,18 +322,18 @@ export function AppSidebar({
                     key={prompt.id}
                     onClick={() => onSelectSavedPrompt(prompt)}
                     data-testid={`saved-prompt-${prompt.id}`}
-                    className="group w-full text-left py-2 px-3 rounded-lg hover:bg-stone-100 transition-colors"
+                    className="group w-full text-left py-2 px-3 rounded-lg hover:bg-accent transition-colors"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm truncate" style={{ color: "#18181b" }}>{prompt.name}</p>
-                        <p className="text-xs truncate mt-0.5" style={{ color: "#a8a29e" }}>{prompt.targetTool}</p>
+                        <p className="text-sm truncate" style={{ color: "hsl(var(--foreground))" }}>{prompt.name}</p>
+                        <p className="text-xs truncate mt-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{prompt.targetTool}</p>
                       </div>
                       <span
                         onClick={e => { e.stopPropagation(); onDeleteSavedPrompt(prompt.id); }}
-                        className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer p-1 rounded hover:bg-stone-200"
+                        className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer p-1 rounded hover:bg-muted"
                       >
-                        <Trash2 className="w-3.5 h-3.5" style={{ color: "#a8a29e" }} />
+                        <Trash2 className="w-3.5 h-3.5" style={{ color: "hsl(var(--muted-foreground))" }} />
                       </span>
                     </div>
                   </button>
@@ -327,8 +343,8 @@ export function AppSidebar({
 
             {/* Chats */}
             <div className="mt-4">
-              <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium" style={{ color: "#44403c" }}>
-                <MessageSquare className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+              <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium" style={{ color: "hsl(var(--sidebar-foreground))" }}>
+                <MessageSquare className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
                 Chats
               </div>
               {(() => {
@@ -337,7 +353,7 @@ export function AppSidebar({
                   : conversations;
                 return filtered.length === 0 ? (
                   <div className="px-3 py-4 text-center">
-                    <p className="text-xs" style={{ color: "#a8a29e" }}>
+                    <p className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
                       {searchQuery ? "No matching chats" : "No chats yet"}
                     </p>
                   </div>
@@ -347,20 +363,22 @@ export function AppSidebar({
                     onClick={() => onSelectConversation(conv.id)}
                     data-testid={`conversation-${conv.id}`}
                     className="group w-full text-left py-2 px-3 rounded-lg transition-colors"
-                    style={{ backgroundColor: activeConversationId === conv.id ? "#f0ece8" : "transparent" }}
+                    style={{
+                      backgroundColor: activeConversationId === conv.id ? "hsl(var(--sidebar-accent))" : "transparent",
+                    }}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p
                         className="text-sm truncate flex-1"
-                        style={{ color: activeConversationId === conv.id ? "#1c1a17" : "#44403c" }}
+                        style={{ color: "hsl(var(--sidebar-foreground))" }}
                       >
                         {conv.title}
                       </p>
                       <span
                         onClick={e => { e.stopPropagation(); onDeleteConversation(conv.id); }}
-                        className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer p-1 rounded hover:bg-stone-200"
+                        className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity cursor-pointer p-1 rounded hover:bg-muted"
                       >
-                        <Trash2 className="w-3.5 h-3.5" style={{ color: "#a8a29e" }} />
+                        <Trash2 className="w-3.5 h-3.5" style={{ color: "hsl(var(--muted-foreground))" }} />
                       </span>
                     </div>
                   </button>
@@ -373,43 +391,47 @@ export function AppSidebar({
         {/* Footer */}
         <div
           className="flex-shrink-0 px-3 pb-3 pt-2 relative"
-          style={{ borderTop: "1px solid #e5e2dd" }}
+          style={{ borderTop: "1px solid hsl(var(--sidebar-border))" }}
           ref={menuRef}
         >
           {/* Profile popup */}
           {user && menuOpen && (
             <div
               className="absolute left-3 right-3 rounded-xl shadow-lg py-1 z-50"
-              style={{ bottom: "calc(100% + 6px)", backgroundColor: "#ffffff", border: "1px solid #e5e2dd" }}
+              style={{
+                bottom: "calc(100% + 6px)",
+                backgroundColor: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--popover-border))",
+              }}
             >
               <button
                 onClick={() => openSettings("general")}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
-                style={{ color: "#1c1a17" }}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-accent"
+                style={{ color: "hsl(var(--foreground))" }}
               >
-                <Settings className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                <Settings className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
                 Settings
               </button>
 
-              <div style={{ height: "1px", backgroundColor: "#e5e2dd", margin: "4px 12px" }} />
+              <div style={{ height: "1px", backgroundColor: "hsl(var(--border))", margin: "4px 12px" }} />
 
               <button
                 onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
-                style={{ color: "#1c1a17" }}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-accent"
+                style={{ color: "hsl(var(--foreground))" }}
               >
-                <Zap className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                <Zap className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
                 Upgrade plan
               </button>
 
-              <div style={{ height: "1px", backgroundColor: "#e5e2dd", margin: "4px 12px" }} />
+              <div style={{ height: "1px", backgroundColor: "hsl(var(--border))", margin: "4px 12px" }} />
 
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-stone-50"
-                style={{ color: "#1c1a17" }}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors hover:bg-accent"
+                style={{ color: "hsl(var(--foreground))" }}
               >
-                <LogOut className="w-4 h-4 shrink-0" style={{ color: "#78716c" }} />
+                <LogOut className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />
                 Log out
               </button>
             </div>
@@ -419,17 +441,17 @@ export function AppSidebar({
             <button
               onClick={() => setMenuOpen(o => !o)}
               data-testid="button-profile"
-              className="w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-stone-100"
+              className="w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors hover:bg-accent"
             >
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-semibold"
-                style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                style={{ backgroundColor: "hsl(var(--sidebar-primary))", color: "hsl(var(--sidebar-primary-foreground))" }}
               >
                 {avatarLetter || <User className="w-4 h-4" />}
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs truncate" style={{ color: "#44403c" }}>{user?.email}</p>
-                <p className="text-[10px] truncate" style={{ color: "#a8a29e" }}>{planLabel}</p>
+                <p className="text-xs truncate" style={{ color: "hsl(var(--sidebar-foreground))" }}>{user?.email}</p>
+                <p className="text-[10px] truncate" style={{ color: "hsl(var(--muted-foreground))" }}>{planLabel}</p>
               </div>
             </button>
           ) : (
@@ -437,14 +459,14 @@ export function AppSidebar({
               <button
                 onClick={() => setLocation("/login?mode=signup")}
                 className="w-full text-xs py-2 rounded-xl font-medium transition-colors"
-                style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
               >
                 Sign up free
               </button>
               <button
                 onClick={() => setLocation("/login")}
                 className="w-full text-xs py-2 rounded-xl font-medium flex items-center justify-center gap-1.5"
-                style={{ color: "#1c1a17", border: "1px solid #e8dcc8" }}
+                style={{ color: "hsl(var(--foreground))", border: "1px solid hsl(var(--border))" }}
               >
                 <LogIn className="w-3 h-3" />
                 Log in
@@ -460,14 +482,14 @@ export function AppSidebar({
           className="p-0 gap-0 overflow-hidden"
           style={{ maxWidth: "680px", width: "95vw", height: "600px" }}
         >
-          <div className="flex h-full">
+          <div className="flex h-full" style={{ backgroundColor: "hsl(var(--background))" }}>
             {/* Left nav */}
             <div
               className="flex flex-col flex-shrink-0"
-              style={{ width: "176px", borderRight: "1px solid #e5e2dd", backgroundColor: "#fafaf9" }}
+              style={{ width: "176px", borderRight: "1px solid hsl(var(--border))", backgroundColor: "hsl(var(--sidebar))" }}
             >
               <div className="px-4 pt-5 pb-4">
-                <p className="text-sm font-semibold" style={{ color: "#18181b" }}>Settings</p>
+                <p className="text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>Settings</p>
               </div>
               <nav className="flex flex-col gap-0.5 px-2">
                 {sectionBtn("General", "general")}
@@ -477,13 +499,13 @@ export function AppSidebar({
             </div>
 
             {/* Right content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "hsl(var(--background))" }}>
 
               {/* ── GENERAL ── */}
               {settingsSection === "general" && (
                 <div className="p-6 space-y-8">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#a8a29e" }}>Language</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>Language</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {LANGUAGES.map(lang => (
                         <button
@@ -491,27 +513,27 @@ export function AppSidebar({
                           onClick={() => selectLanguage(lang)}
                           className="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors"
                           style={{
-                            backgroundColor: selectedLang === lang ? "#f0ece8" : "#f5f5f4",
-                            color: selectedLang === lang ? "#18181b" : "#78716c",
+                            backgroundColor: selectedLang === lang ? "hsl(var(--accent))" : "hsl(var(--muted))",
+                            color: selectedLang === lang ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                           }}
                         >
                           {lang}
-                          {selectedLang === lang && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#78716c" }} />}
+                          {selectedLang === lang && <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} />}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#a8a29e" }}>Appearance</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>Appearance</p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setTheme("light")}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border"
                         style={{
-                          backgroundColor: theme === "light" ? "#1c1a17" : "#f5f5f4",
-                          color: theme === "light" ? "#ffffff" : "#78716c",
-                          borderColor: theme === "light" ? "#1c1a17" : "#e5e2dd",
+                          backgroundColor: theme === "light" ? "hsl(var(--foreground))" : "hsl(var(--muted))",
+                          color: theme === "light" ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                          borderColor: theme === "light" ? "hsl(var(--foreground))" : "hsl(var(--border))",
                         }}
                       >
                         <Sun className="w-4 h-4" />
@@ -521,9 +543,9 @@ export function AppSidebar({
                         onClick={() => setTheme("dark")}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border"
                         style={{
-                          backgroundColor: theme === "dark" ? "#1c1a17" : "#f5f5f4",
-                          color: theme === "dark" ? "#ffffff" : "#78716c",
-                          borderColor: theme === "dark" ? "#1c1a17" : "#e5e2dd",
+                          backgroundColor: theme === "dark" ? "hsl(var(--foreground))" : "hsl(var(--muted))",
+                          color: theme === "dark" ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+                          borderColor: theme === "dark" ? "hsl(var(--foreground))" : "hsl(var(--border))",
                         }}
                       >
                         <Moon className="w-4 h-4" />
@@ -537,133 +559,87 @@ export function AppSidebar({
               {/* ── ACCOUNT ── */}
               {settingsSection === "account" && (
                 <div className="p-6 space-y-6">
-                  {/* Email */}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#a8a29e" }}>Email address</p>
-                    <p className="text-sm mb-3" style={{ color: "#44403c" }}>{user?.email}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Email address</p>
+                    <p className="text-sm mb-3" style={{ color: "hsl(var(--foreground))" }}>{user?.email}</p>
                     <form onSubmit={handleEmailChange} className="space-y-2">
-                      <Input
-                        type="email"
-                        placeholder="New email address"
-                        value={newEmail}
-                        onChange={e => setNewEmail(e.target.value)}
-                        className="h-9 text-sm"
-                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
-                      />
-                      <Input
-                        type="password"
-                        placeholder="Current password to confirm"
-                        value={emailConfirmPass}
-                        onChange={e => setEmailConfirmPass(e.target.value)}
-                        className="h-9 text-sm"
-                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
-                      />
+                      <Input type="email" placeholder="New email address" value={newEmail} onChange={e => setNewEmail(e.target.value)} className="h-9 text-sm" />
+                      <Input type="password" placeholder="Current password to confirm" value={emailConfirmPass} onChange={e => setEmailConfirmPass(e.target.value)} className="h-9 text-sm" />
                       <button
                         type="submit"
                         disabled={emailLoading || !newEmail.trim() || !emailConfirmPass}
                         className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
-                        style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                        style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
                       >
                         {emailLoading ? "Updating…" : "Update email"}
                       </button>
                     </form>
                   </div>
 
-                  <div style={{ height: "1px", backgroundColor: "#e5e2dd" }} />
+                  <div style={{ height: "1px", backgroundColor: "hsl(var(--border))" }} />
 
-                  {/* Password */}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#a8a29e" }}>Password</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>Password</p>
                     <form onSubmit={handlePasswordChange} className="space-y-2">
-                      <Input
-                        type="password"
-                        placeholder="Current password"
-                        value={currentPass}
-                        onChange={e => setCurrentPass(e.target.value)}
-                        className="h-9 text-sm"
-                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
-                      />
-                      <Input
-                        type="password"
-                        placeholder="New password"
-                        value={newPass}
-                        onChange={e => setNewPass(e.target.value)}
-                        className="h-9 text-sm"
-                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
-                      />
-                      <Input
-                        type="password"
-                        placeholder="Confirm new password"
-                        value={confirmPass}
-                        onChange={e => setConfirmPass(e.target.value)}
-                        className="h-9 text-sm"
-                        style={{ backgroundColor: "#f5f5f4", border: "1px solid #e5e2dd" }}
-                      />
+                      <Input type="password" placeholder="Current password" value={currentPass} onChange={e => setCurrentPass(e.target.value)} className="h-9 text-sm" />
+                      <Input type="password" placeholder="New password" value={newPass} onChange={e => setNewPass(e.target.value)} className="h-9 text-sm" />
+                      <Input type="password" placeholder="Confirm new password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} className="h-9 text-sm" />
                       <button
                         type="submit"
                         disabled={passLoading || !currentPass || !newPass || !confirmPass}
                         className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
-                        style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                        style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
                       >
                         {passLoading ? "Updating…" : "Update password"}
                       </button>
                     </form>
                   </div>
 
-                  <div style={{ height: "1px", backgroundColor: "#e5e2dd" }} />
+                  <div style={{ height: "1px", backgroundColor: "hsl(var(--border))" }} />
 
-                  {/* Log out of all devices */}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#a8a29e" }}>Sessions</p>
-                    <p className="text-xs mb-3" style={{ color: "#78716c" }}>Ends your current session on all devices.</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>Sessions</p>
+                    <p className="text-xs mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>Ends your current session on all devices.</p>
                     <button
                       onClick={handleLogout}
                       className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
-                      style={{ color: "#18181b", borderColor: "#e5e2dd", backgroundColor: "#ffffff" }}
+                      style={{ color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))", backgroundColor: "transparent" }}
                     >
                       Log out of all devices
                     </button>
                   </div>
 
-                  <div style={{ height: "1px", backgroundColor: "#e5e2dd" }} />
+                  <div style={{ height: "1px", backgroundColor: "hsl(var(--border))" }} />
 
-                  {/* Delete account */}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "#dc2626" }}>Danger zone</p>
-                    <p className="text-xs mb-3" style={{ color: "#78716c" }}>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "hsl(var(--destructive))" }}>Danger zone</p>
+                    <p className="text-xs mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
                       Permanently deletes your account and all data. This cannot be undone.
                     </p>
                     {!showDeleteConfirm ? (
                       <button
                         onClick={() => setShowDeleteConfirm(true)}
                         className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
-                        style={{ color: "#dc2626", borderColor: "#fecaca", backgroundColor: "#fff5f5" }}
+                        style={{ color: "hsl(var(--destructive))", borderColor: "hsl(var(--destructive))", backgroundColor: "transparent" }}
                       >
                         Delete account
                       </button>
                     ) : (
                       <div className="space-y-2">
-                        <Input
-                          type="password"
-                          placeholder="Enter your password to confirm"
-                          value={deletePass}
-                          onChange={e => setDeletePass(e.target.value)}
-                          className="h-9 text-sm"
-                          style={{ backgroundColor: "#f5f5f4", border: "1px solid #fecaca" }}
-                        />
+                        <Input type="password" placeholder="Enter your password to confirm" value={deletePass} onChange={e => setDeletePass(e.target.value)} className="h-9 text-sm" />
                         <div className="flex gap-2">
                           <button
                             onClick={handleDeleteAccount}
                             disabled={deleteLoading || !deletePass}
                             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
-                            style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
+                            style={{ backgroundColor: "hsl(var(--destructive))", color: "hsl(var(--destructive-foreground))" }}
                           >
                             {deleteLoading ? "Deleting…" : "Confirm delete"}
                           </button>
                           <button
                             onClick={() => { setShowDeleteConfirm(false); setDeletePass(""); }}
                             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                            style={{ color: "#78716c", backgroundColor: "#f5f5f4" }}
+                            style={{ color: "hsl(var(--muted-foreground))", backgroundColor: "hsl(var(--muted))" }}
                           >
                             Cancel
                           </button>
@@ -677,25 +653,22 @@ export function AppSidebar({
               {/* ── BILLING ── */}
               {settingsSection === "billing" && (
                 <div className="p-6">
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#a8a29e" }}>Subscription</p>
-                  <div
-                    className="rounded-xl p-4 border mb-4"
-                    style={{ borderColor: "#e5e2dd", backgroundColor: "#fafaf9" }}
-                  >
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "hsl(var(--muted-foreground))" }}>Subscription</p>
+                  <div className="rounded-xl p-4 border mb-4" style={{ borderColor: "hsl(var(--border))", backgroundColor: "hsl(var(--muted))" }}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium" style={{ color: "#18181b" }}>Current plan</p>
-                        <p className="text-xs mt-0.5" style={{ color: "#a8a29e" }}>{planLabel || "Free"}</p>
+                        <p className="text-sm font-medium" style={{ color: "hsl(var(--foreground))" }}>Current plan</p>
+                        <p className="text-xs mt-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>{planLabel || "Free"}</p>
                       </div>
                       <button
                         className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                        style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                        style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
                       >
                         Upgrade
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs" style={{ color: "#a8a29e" }}>
+                  <p className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
                     Billing management coming soon.
                   </p>
                 </div>

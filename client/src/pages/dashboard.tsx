@@ -342,7 +342,7 @@ export default function DashboardPage() {
   const inputBox = (testIdSuffix: string, disabled = false) => (
     <div
       className="flex items-end gap-2 rounded-2xl px-4 py-3"
-      style={{ backgroundColor: "#f0ece8", border: "1px solid #e5e2dd" }}
+      style={{ backgroundColor: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}
     >
       <textarea
         ref={inputRef}
@@ -353,15 +353,15 @@ export default function DashboardPage() {
         rows={1}
         disabled={disabled}
         data-testid={`input-prompt${testIdSuffix}`}
-        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-stone-300 disabled:opacity-50"
-        style={{ color: "#18181b", minHeight: "24px", maxHeight: "320px" }}
+        className="flex-1 bg-transparent border-0 outline-none resize-none text-sm leading-6 placeholder:text-stone-400 disabled:opacity-50"
+        style={{ color: "hsl(var(--foreground))", minHeight: "24px", maxHeight: "320px" }}
       />
       <button
         onClick={handleGenerate}
         disabled={!inputValue.trim() || isGenerating}
         data-testid={`button-send${testIdSuffix}`}
         className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-        style={{ backgroundColor: inputValue.trim() ? "#1c1a17" : "#d6d3d1", color: "#ffffff" }}
+        style={{ backgroundColor: inputValue.trim() ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", color: "hsl(var(--background))" }}
       >
         {isGenerating && testIdSuffix === "-chat" ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -375,7 +375,7 @@ export default function DashboardPage() {
   const platformHint = (compact = false) => (
     <p
       className={`text-center ${compact ? "mt-2 text-[11px]" : "mt-3 text-xs"}`}
-      style={{ color: "#a8a29e" }}
+      style={{ color: "hsl(var(--muted-foreground))" }}
     >
       Choose your platform — or just mention it in your description
     </p>
@@ -391,9 +391,9 @@ export default function DashboardPage() {
           className="rounded-full text-xs font-medium transition-all"
           style={{
             padding: compact ? "4px 10px" : "6px 12px",
-            backgroundColor: selectedTool === tool ? "#1c1a17" : "#f0ece8",
-            color: selectedTool === tool ? "#ffffff" : "#78716c",
-            border: `1px solid ${selectedTool === tool ? "#1c1a17" : "#e5e2dd"}`,
+            backgroundColor: selectedTool === tool ? "hsl(var(--foreground))" : "hsl(var(--muted))",
+            color: selectedTool === tool ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
+            border: `1px solid ${selectedTool === tool ? "hsl(var(--foreground))" : "hsl(var(--border))"}`,
           }}
         >
           {tool}
@@ -404,8 +404,8 @@ export default function DashboardPage() {
 
   if (authLoading) {
     return (
-      <div className="h-screen flex items-center justify-center" style={{ backgroundColor: "#faf8f5" }}>
-        <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#78716c" }} />
+      <div className="h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-5 h-5 animate-spin" style={{ color: "hsl(var(--muted-foreground))" }} />
       </div>
     );
   }
@@ -419,7 +419,7 @@ export default function DashboardPage() {
         "--sidebar-width-icon": "3rem",
       } as React.CSSProperties}
     >
-      <div className="flex h-screen w-full" style={{ backgroundColor: "#faf8f5" }}>
+      <div className="flex h-screen w-full bg-background">
         {/* Sidebar wrapper — collapses to 0 when closed so content fills the screen */}
         <div
           className="flex-shrink-0 overflow-hidden"
@@ -443,13 +443,13 @@ export default function DashboardPage() {
         <div className="flex flex-col flex-1 min-w-0">
           <header
             className="flex items-center gap-2 px-4 h-12 shrink-0"
-            style={{ borderBottom: "1px solid #e5e2dd", backgroundColor: "#faf8f5" }}
+            style={{ borderBottom: "1px solid hsl(var(--border))", backgroundColor: "hsl(var(--background))" }}
           >
             {!sidebarOpen && <SidebarTrigger className="text-stone-400" />}
             {detectedTool && hasMessages && (
               <span
                 className="text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#f0ece8", color: "#78716c" }}
+                style={{ backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}
                 data-testid="badge-detected-tool"
               >
                 {detectedTool}
@@ -461,14 +461,14 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setLocation("/login")}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                  style={{ color: "#78716c" }}
+                  style={{ color: "hsl(var(--muted-foreground))" }}
                 >
                   Log in
                 </button>
                 <button
                   onClick={() => setLocation("/login?mode=signup")}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                  style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+                  style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
                 >
                   Sign up
                 </button>
@@ -481,7 +481,7 @@ export default function DashboardPage() {
               <div className="flex-1 flex flex-col items-center justify-center px-6">
                 <h2
                   className="text-2xl md:text-3xl font-light text-center mb-10 leading-relaxed max-w-xl"
-                  style={{ color: "#18181b" }}
+                  style={{ color: "hsl(var(--foreground))" }}
                   data-testid="text-welcome-heading"
                 >
                   I'll create the perfect prompt for any AI tool
@@ -493,18 +493,18 @@ export default function DashboardPage() {
                     <>
                       <span
                         className="absolute rounded-full animate-ping"
-                        style={{ width: "88px", height: "88px", backgroundColor: "#1DB954", opacity: 0.25 }}
+                        style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }}
                       />
                       <span
                         className="absolute rounded-full animate-ping"
-                        style={{ width: "104px", height: "104px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }}
+                        style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }}
                       />
                     </>
                   )}
                   <button
                     onClick={toggleVoice}
                     data-testid="button-mic-center"
-                    className="relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
+                    className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
                     style={{
                       backgroundColor: "#1DB954",
                       border: "2px solid #1DB954",
@@ -513,7 +513,7 @@ export default function DashboardPage() {
                         : "0 2px 8px rgba(0,0,0,0.12)",
                     }}
                   >
-                    <Mic className="w-8 h-8" style={{ color: "#ffffff" }} />
+                    <Mic className="w-6 h-6" style={{ color: "#ffffff" }} />
                   </button>
 
                   {/* Speak hint — floats to the right of the mic */}
@@ -521,7 +521,7 @@ export default function DashboardPage() {
                     onClick={toggleVoice}
                     className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
                     style={{
-                      left: "calc(50% + 52px)",
+                      left: "calc(50% + 40px)",
                       color: isListening ? "#1DB954" : "#c4c0bb",
                       whiteSpace: "nowrap",
                     }}
@@ -550,8 +550,8 @@ export default function DashboardPage() {
                         <div
                           className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                           style={{
-                            backgroundColor: msg.role === "user" ? "#1c1a17" : "#f0ece8",
-                            color: msg.role === "user" ? "#ffffff" : "#78716c",
+                            backgroundColor: msg.role === "user" ? "hsl(var(--foreground))" : "hsl(var(--muted))",
+                            color: msg.role === "user" ? "hsl(var(--background))" : "hsl(var(--muted-foreground))",
                           }}
                         >
                           {msg.role === "user" ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -562,19 +562,19 @@ export default function DashboardPage() {
                           <div
                             className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words"
                             style={msg.role === "user"
-                              ? { backgroundColor: "#1c1a17", color: "#ffffff", borderBottomRightRadius: "4px" }
-                              : { backgroundColor: "#f0ece8", color: "#18181b", borderBottomLeftRadius: "4px" }
+                              ? { backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))", borderBottomRightRadius: "4px" }
+                              : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderBottomLeftRadius: "4px" }
                             }
                           >
                             {msg.isStreaming && !msg.content ? (
                               <span className="flex items-center gap-1.5 py-0.5">
-                                <span className="text-xs" style={{ color: "#78716c" }}>Crafting your prompt</span>
+                                <span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>Crafting your prompt</span>
                                 <span className="flex gap-1">
                                   {[0, 1, 2].map(i => (
                                     <span
                                       key={i}
                                       className="inline-block w-1.5 h-1.5 rounded-full animate-bounce"
-                                      style={{ backgroundColor: "#a8a29e", animationDelay: `${i * 0.15}s` }}
+                                      style={{ backgroundColor: "hsl(var(--muted-foreground))", animationDelay: `${i * 0.15}s` }}
                                     />
                                   ))}
                                 </span>
@@ -583,7 +583,7 @@ export default function DashboardPage() {
                               <>
                                 {msg.content}
                                 {msg.isStreaming && (
-                                  <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "#78716c" }} />
+                                  <span className="inline-block w-1.5 h-4 ml-0.5 animate-pulse" style={{ backgroundColor: "hsl(var(--muted-foreground))" }} />
                                 )}
                               </>
                             )}
@@ -595,7 +595,7 @@ export default function DashboardPage() {
                                 onClick={() => copyToClipboard(msg.content)}
                                 data-testid={`button-copy-${index}`}
                                 className="h-6 px-2 text-xs gap-1"
-                                style={{ color: "#a8a29e" }}
+                                style={{ color: "hsl(var(--muted-foreground))" }}
                               >
                                 <Copy className="w-3 h-3" /> Copy
                               </Button>
@@ -604,7 +604,7 @@ export default function DashboardPage() {
                                 onClick={() => handleSave(msg)}
                                 data-testid={`button-save-${index}`}
                                 className="h-6 px-2 text-xs gap-1"
-                                style={{ color: "#a8a29e" }}
+                                style={{ color: "hsl(var(--muted-foreground))" }}
                               >
                                 <Bookmark className="w-3 h-3" /> Save
                               </Button>
@@ -617,7 +617,7 @@ export default function DashboardPage() {
                   </div>
                 </ScrollArea>
 
-                <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid #e5e2dd" }}>
+                <div className="shrink-0 px-4 pb-4 pt-2" style={{ borderTop: "1px solid hsl(var(--border))" }}>
                   <div className="max-w-2xl mx-auto">
                     {inputBox("-chat", isGenerating)}
                     {platformHint(true)}
@@ -653,33 +653,33 @@ export default function DashboardPage() {
       {showNudge && !user && (
         <div
           className="fixed bottom-6 right-6 z-50 rounded-2xl p-4 max-w-xs shadow-lg"
-          style={{ backgroundColor: "#ffffff", border: "1px solid #e5e2dd" }}
+          style={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--popover-border))" }}
         >
           <button
             onClick={() => setShowNudge(false)}
-            className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-stone-100"
-            style={{ color: "#a8a29e" }}
+            className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-muted"
+            style={{ color: "hsl(var(--muted-foreground))" }}
           >
             <X className="w-3 h-3" />
           </button>
-          <p className="text-sm font-semibold mb-1 pr-4" style={{ color: "#18181b" }}>
+          <p className="text-sm font-semibold mb-1 pr-4" style={{ color: "hsl(var(--foreground))" }}>
             Save your prompts
           </p>
-          <p className="text-xs mb-3" style={{ color: "#71717a" }}>
+          <p className="text-xs mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
             Create a free account to keep your history and saved prompts across sessions.
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => setLocation("/login")}
               className="flex-1 text-xs py-1.5 rounded-lg font-medium border transition-colors"
-              style={{ color: "#78716c", borderColor: "#e5e2dd" }}
+              style={{ color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--border))" }}
             >
               Log in
             </button>
             <button
               onClick={() => setLocation("/login?mode=signup")}
               className="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: "#1c1a17", color: "#ffffff" }}
+              style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
             >
               Sign up free
             </button>
