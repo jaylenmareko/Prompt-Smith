@@ -238,8 +238,6 @@ export default function DashboardPage() {
       ];
       persistConversation(convId, title, finalMessages);
 
-      // Open sidebar after first prompt for logged-in users
-      if (user) setSidebarOpen(true);
 
     } catch (error: any) {
       toast({ title: "Generation failed", description: error.message || "Please try again", variant: "destructive" });
