@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const { t, lang } = useLanguage();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [loginModalMode, setLoginModalMode] = useState<"login" | "signup">("login");
 
@@ -87,6 +88,12 @@ export default function DashboardPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   // Auto-focus input on mount and when returning to empty state
   useEffect(() => {
@@ -151,13 +158,15 @@ export default function DashboardPage() {
       setCurrentConvTitle(conv.title);
       setDetectedTool(conv.messages.find(m => m.role === "assistant")?.targetTool || null);
     }
-  }, []);
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
 
   const loadSavedPrompt = useCallback((prompt: LocalSavedPrompt) => {
     setInputValue(prompt.userInput);
     setSelectedTool(prompt.targetTool);
     inputRef.current?.focus();
-  }, []);
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
 
   const startNewChat = useCallback(() => {
     setMessages([]);
@@ -475,13 +484,15 @@ export default function DashboardPage() {
   );
 
   const toolPills = (testPrefix: string, compact = false) => (
-    <div className={`flex flex-wrap gap-2 ${compact ? "mt-2" : "mt-3"} justify-center`}>
+    <div className={`flex gap-2 ${compact ? "mt-2" : "mt-3"} overflow-x-auto pb-1 md:flex-wrap md:justify-center`}
+      style={{ scrollbarWidth: "none" }}
+    >
       {TOOL_PILLS.map(tool => (
         <button
           key={tool}
           onClick={() => setSelectedTool(selectedTool === tool ? null : tool)}
           data-testid={`pill-${testPrefix}-${tool.toLowerCase().replace(/[·\s]/g, "")}`}
-          className="rounded-full text-xs font-medium transition-all"
+          className="rounded-full text-xs font-medium transition-all shrink-0"
           style={{
             padding: compact ? "4px 10px" : "6px 12px",
             backgroundColor: selectedTool === tool ? "hsl(var(--foreground))" : "hsl(var(--muted))",
@@ -513,9 +524,17 @@ export default function DashboardPage() {
       } as React.CSSProperties}
     >
       <div className="flex h-screen w-full bg-background">
-        {/* Sidebar wrapper — collapses to 0 when closed so content fills the screen */}
+        {/* Mobile backdrop */}
+        {isMobile && sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar — overlay on mobile, push on desktop */}
         <div
-          className="flex-shrink-0 overflow-hidden"
+          className={isMobile ? "fixed left-0 top-0 h-full z-50 overflow-hidden" : "flex-shrink-0 overflow-hidden"}
           style={{ width: sidebarOpen ? SIDEBAR_WIDTH : 0, transition: "width 0.2s ease" }}
         >
           <div style={{ width: SIDEBAR_WIDTH, height: "100%" }}>
@@ -554,7 +573,7 @@ export default function DashboardPage() {
               <div className="ml-auto flex items-center gap-2">
                 <button
                   onClick={() => openLogin("login")}
-                  className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
+                  className="hidden sm:block text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
                   style={{ color: "hsl(var(--muted-foreground))" }}
                 >
                   {t.logIn}
@@ -574,7 +593,7 @@ export default function DashboardPage() {
             {!hasMessages ? (
               <div className="flex-1 flex flex-col items-center justify-center px-6 relative">
                 <h2
-                  className="text-2xl md:text-3xl font-light text-center mb-10 leading-relaxed max-w-xl"
+                  className="text-xl md:text-3xl font-light text-center mb-6 md:mb-10 leading-relaxed max-w-xl"
                   style={{ color: "hsl(var(--foreground))" }}
                   data-testid="text-welcome-heading"
                 >
@@ -610,10 +629,10 @@ export default function DashboardPage() {
                     <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
                   </button>
 
-                  {/* Speak hint — floats to the right of the mic */}
+                  {/* Speak hint — floats to the right of the mic, hidden on small screens */}
                   <button
                     onClick={toggleVoice}
-                    className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
+                    className={`absolute text-xs transition-colors hidden sm:block ${!isListening ? "animate-flicker" : ""}`}
                     style={{
                       left: "calc(50% + 40px)",
                       color: isListening ? "#1DB954" : "#c4c0bb",
@@ -631,8 +650,8 @@ export default function DashboardPage() {
                   {toolPills("welcome")}
                 </div>
 
-                {/* Powered by Claude — bottom-left of landing page */}
-                <div className="absolute bottom-4 left-4 flex items-center gap-1.5">
+                {/* Powered by Claude — bottom-left of landing page, hidden on mobile */}
+                <div className="absolute bottom-4 left-4 hidden sm:flex items-center gap-1.5">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "hsl(var(--muted-foreground))" }} />
                   </svg>
@@ -700,7 +719,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Bubble */}
-                        <div className={`max-w-[75%] min-w-0 flex flex-col ${msg.role === "user" ? "items-end ml-auto" : "items-start mr-auto"}`}>
+                        <div className={`max-w-[85%] md:max-w-[75%] min-w-0 flex flex-col ${msg.role === "user" ? "items-end ml-auto" : "items-start mr-auto"}`}>
                           <div
                             className="rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words"
                             style={msg.role === "user"
