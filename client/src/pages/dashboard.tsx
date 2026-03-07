@@ -58,6 +58,7 @@ export default function DashboardPage() {
   const [detectedTool, setDetectedTool] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const committedRef = useRef("");
+  const shouldListenRef = useRef(false);
   const [conversations, setConversations] = useState<LocalConversation[]>(getStoredConversations);
   const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(getStoredSavedPrompts);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -288,23 +289,14 @@ export default function DashboardPage() {
   };
 
   const stopVoice = () => {
+    shouldListenRef.current = false;
     recognitionRef.current?.stop();
     setIsListening(false);
   };
 
-  const toggleVoice = () => {
-    if (isListening) {
-      stopVoice();
-      return;
-    }
+  const startRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ title: "Voice not supported", description: "Use Chrome for voice input", variant: "destructive" });
-      return;
-    }
-
-    // Snapshot whatever is already typed as the committed base
-    committedRef.current = inputRef.current?.value.trim() ?? "";
+    if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -320,14 +312,41 @@ export default function DashboardPage() {
           interim += result[0].transcript;
         }
       }
-      // Replace entire input value: committed finals + current interim preview
       setInputValue(committedRef.current + (interim ? (committedRef.current ? " " : "") + interim : ""));
     };
-    recognition.onerror = () => { setIsListening(false); };
-    recognition.onend = () => { setIsListening(false); };
+    recognition.onerror = (event: any) => {
+      // Don't stop on no-speech errors — just let onend restart it
+      if (event.error === "aborted") {
+        shouldListenRef.current = false;
+        setIsListening(false);
+      }
+    };
+    recognition.onend = () => {
+      // If user hasn't manually stopped, restart immediately
+      if (shouldListenRef.current) {
+        try { recognition.start(); } catch {}
+      } else {
+        setIsListening(false);
+      }
+    };
     recognitionRef.current = recognition;
     recognition.start();
+  };
+
+  const toggleVoice = () => {
+    if (isListening) {
+      stopVoice();
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice not supported", description: "Use Chrome for voice input", variant: "destructive" });
+      return;
+    }
+    committedRef.current = inputRef.current?.value.trim() ?? "";
+    shouldListenRef.current = true;
     setIsListening(true);
+    startRecognition();
   };
 
 
