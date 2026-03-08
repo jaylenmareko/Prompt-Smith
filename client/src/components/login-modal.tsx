@@ -86,10 +86,13 @@ export function LoginModal({ open, onOpenChange, defaultMode = "login" }: LoginM
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
       <DialogContent
-        className="sm:max-w-sm p-0 overflow-y-auto max-h-[90dvh]"
+        className="sm:max-w-sm p-0 max-h-[90dvh] flex flex-col"
         style={{ borderRadius: "16px", border: "1px solid hsl(var(--border))" }}
       >
-        <div className="px-8 py-10">
+        <div
+          className="px-8 py-10"
+          style={{ overflowY: "scroll", WebkitOverflowScrolling: "touch" as any, overscrollBehavior: "contain" }}
+        >
           {/* Header */}
           <div className="text-center mb-8">
             <p className="text-2xl font-semibold mb-1" style={{ color: "hsl(var(--foreground))" }}>
