@@ -362,7 +362,9 @@ export default function DashboardPage() {
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    // continuous:false is required for iOS Safari — it doesn't fire results with continuous:true.
+    // We simulate continuous listening by creating a fresh instance in onend.
+    recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = LANG_CODES[lang] ?? "en-US";
     recognition.onresult = (event: any) => {
@@ -378,16 +380,17 @@ export default function DashboardPage() {
       setInputValue(committedRef.current + (interim ? (committedRef.current ? " " : "") + interim : ""));
     };
     recognition.onerror = (event: any) => {
-      // Don't stop on no-speech errors — just let onend restart it
-      if (event.error === "aborted") {
+      // Only stop on user-aborted; ignore no-speech and other transient errors
+      if (event.error === "aborted" || event.error === "not-allowed") {
         shouldListenRef.current = false;
         setIsListening(false);
       }
     };
     recognition.onend = () => {
-      // If user hasn't manually stopped, restart immediately
+      // Always create a fresh instance — calling .start() on an ended instance
+      // throws InvalidStateError on iOS Safari and silently fails on Android.
       if (shouldListenRef.current) {
-        try { recognition.start(); } catch {}
+        startRecognition();
       } else {
         setIsListening(false);
       }
