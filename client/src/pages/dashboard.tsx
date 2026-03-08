@@ -599,61 +599,62 @@ export default function DashboardPage() {
 
           <main className="flex-1 flex flex-col overflow-hidden">
             {!hasMessages ? (
-              <div className="flex-1 flex flex-col items-center px-6 relative justify-between pt-10 pb-6 md:justify-center md:pt-0 md:pb-0">
-                {/* Heading — top on mobile, in-flow on desktop */}
-                <h2
-                  className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-0 md:mb-10"
-                  style={{ color: "hsl(var(--foreground))" }}
-                  data-testid="text-welcome-heading"
-                >
-                  {t.welcomeHeading}
-                </h2>
-
-                {/* Mic — centered in remaining space on mobile, in-flow on desktop */}
-                <div className="relative flex items-center justify-center md:mb-10">
-                  {isListening && (
-                    <>
-                      <span
-                        className="absolute rounded-full animate-ping"
-                        style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }}
-                      />
-                      <span
-                        className="absolute rounded-full animate-ping"
-                        style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }}
-                      />
-                    </>
-                  )}
-                  <button
-                    onClick={toggleVoice}
-                    data-testid="button-mic-center"
-                    className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
-                    style={{
-                      backgroundColor: "#ffffff",
-                      border: "2px solid #e5e5e5",
-                      boxShadow: isListening
-                        ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)"
-                        : "0 2px 8px rgba(0,0,0,0.12)",
-                    }}
+              <div className="flex-1 flex flex-col relative px-6">
+                {/* Center block — heading + mic vertically centered in available space */}
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <h2
+                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-8"
+                    style={{ color: "hsl(var(--foreground))" }}
+                    data-testid="text-welcome-heading"
                   >
-                    <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
-                  </button>
+                    {t.welcomeHeading}
+                  </h2>
 
-                  {/* Speak hint — desktop only */}
-                  <button
-                    onClick={toggleVoice}
-                    className={`absolute text-xs transition-colors hidden sm:block ${!isListening ? "animate-flicker" : ""}`}
-                    style={{
-                      left: "calc(50% + 40px)",
-                      color: isListening ? "#1DB954" : "#c4c0bb",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {isListening ? t.listening : t.clickToSpeak}
-                  </button>
+                  <div className="relative flex items-center justify-center">
+                    {isListening && (
+                      <>
+                        <span
+                          className="absolute rounded-full animate-ping"
+                          style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }}
+                        />
+                        <span
+                          className="absolute rounded-full animate-ping"
+                          style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }}
+                        />
+                      </>
+                    )}
+                    <button
+                      onClick={toggleVoice}
+                      data-testid="button-mic-center"
+                      className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
+                      style={{
+                        backgroundColor: "#ffffff",
+                        border: "2px solid #e5e5e5",
+                        boxShadow: isListening
+                          ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)"
+                          : "0 2px 8px rgba(0,0,0,0.12)",
+                      }}
+                    >
+                      <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
+                    </button>
+
+                    {/* Speak hint — desktop only */}
+                    <button
+                      onClick={toggleVoice}
+                      className={`absolute text-xs transition-colors hidden sm:block ${!isListening ? "animate-flicker" : ""}`}
+                      style={{
+                        left: "calc(50% + 40px)",
+                        color: isListening ? "#1DB954" : "#c4c0bb",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {isListening ? t.listening : t.clickToSpeak}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Input section — bottom on mobile, in-flow on desktop */}
-                <div className="w-full max-w-2xl">
+                {/* Bottom section — input + hint + pills, always in frame */}
+                <div className="w-full max-w-2xl mx-auto pb-6">
                   {usageWarning()}
                   {inputBox("")}
                   {platformHint()}
