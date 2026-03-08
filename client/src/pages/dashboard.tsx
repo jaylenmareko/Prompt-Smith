@@ -650,19 +650,11 @@ export default function DashboardPage() {
             {!hasMessages ? (
               <div className="flex-1 flex flex-col relative px-6 md:justify-center">
 
-                {/* Mobile: title absolutely centered on screen */}
-                <h2
-                  className="md:hidden absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-light text-center leading-relaxed px-6"
-                  style={{ color: "hsl(var(--foreground))" }}
-                  data-testid="text-welcome-heading"
-                >
-                  {t.welcomeHeading}
-                </h2>
-
-                {/* Desktop: title + mic in-flow, centered */}
-                <div className="hidden md:flex flex-col items-center mb-10">
+                {/* Center block — title + mic centered together as a unit.
+                    On mobile the large mb pushes mic down toward the input. */}
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-center md:mb-10">
                   <h2
-                    className="text-3xl font-light text-center leading-relaxed max-w-xl mb-8"
+                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-0 md:mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
                     data-testid="text-welcome-heading"
                   >
@@ -670,7 +662,7 @@ export default function DashboardPage() {
                   </h2>
 
                   {/* Mic — desktop only */}
-                  <div className="relative flex items-center justify-center">
+                  <div className="hidden md:flex relative items-center justify-center">
                     {isListening && (
                       <>
                         <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }} />
