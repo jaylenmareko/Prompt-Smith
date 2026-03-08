@@ -521,15 +521,13 @@ export default function DashboardPage() {
   );
 
   const toolPills = (testPrefix: string, compact = false) => (
-    <div className={`flex gap-2 ${compact ? "mt-2" : "mt-3"} overflow-x-auto pb-1 md:flex-wrap md:justify-center`}
-      style={{ scrollbarWidth: "none" }}
-    >
+    <div className={`flex flex-wrap gap-2 justify-center ${compact ? "mt-2" : "mt-3"}`}>
       {TOOL_PILLS.map(tool => (
         <button
           key={tool}
           onClick={() => setSelectedTool(selectedTool === tool ? null : tool)}
           data-testid={`pill-${testPrefix}-${tool.toLowerCase().replace(/[·\s]/g, "")}`}
-          className="rounded-full text-xs font-medium transition-all shrink-0"
+          className="rounded-full text-xs font-medium transition-all"
           style={{
             padding: compact ? "4px 10px" : "6px 12px",
             backgroundColor: selectedTool === tool ? "hsl(var(--foreground))" : "hsl(var(--muted))",
@@ -638,27 +636,23 @@ export default function DashboardPage() {
           <main className="flex-1 flex flex-col overflow-hidden">
             {!hasMessages ? (
               <div className="flex-1 flex flex-col relative px-6 md:justify-center">
-                {/* Center block — mobile: takes all space and centers; desktop: in-flow */}
+
+                {/* MOBILE: title centered alone; DESKTOP: title+mic centered together */}
                 <div className="flex-1 md:flex-none flex flex-col items-center justify-center md:mb-10">
                   <h2
-                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-8"
+                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-0 md:mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
                     data-testid="text-welcome-heading"
                   >
                     {t.welcomeHeading}
                   </h2>
 
-                  <div className="relative flex items-center justify-center">
+                  {/* Mic — desktop only in the center block */}
+                  <div className="hidden md:flex relative items-center justify-center mt-8">
                     {isListening && (
                       <>
-                        <span
-                          className="absolute rounded-full animate-ping"
-                          style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }}
-                        />
-                        <span
-                          className="absolute rounded-full animate-ping"
-                          style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }}
-                        />
+                        <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }} />
+                        <span className="absolute rounded-full animate-ping" style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }} />
                       </>
                     )}
                     <button
@@ -668,31 +662,55 @@ export default function DashboardPage() {
                       style={{
                         backgroundColor: "#ffffff",
                         border: "2px solid #e5e5e5",
-                        boxShadow: isListening
-                          ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)"
-                          : "0 2px 8px rgba(0,0,0,0.12)",
+                        boxShadow: isListening ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)" : "0 2px 8px rgba(0,0,0,0.12)",
                       }}
                     >
                       <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
                     </button>
-
-                    {/* Speak hint — all screen sizes */}
                     <button
                       onClick={toggleVoice}
                       className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
-                      style={{
-                        left: "calc(50% + 40px)",
-                        color: isListening ? "#1DB954" : "#c4c0bb",
-                        whiteSpace: "nowrap",
-                      }}
+                      style={{ left: "calc(50% + 40px)", color: isListening ? "#1DB954" : "#c4c0bb", whiteSpace: "nowrap" }}
                     >
                       {isListening ? t.listening : t.clickToSpeak}
                     </button>
                   </div>
                 </div>
 
-                {/* Input section — mobile: anchored at bottom; desktop: in-flow below mic */}
+                {/* Input section — mic lives here on mobile (above input), desktop mic is above */}
                 <div className="w-full max-w-2xl mx-auto" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
+
+                  {/* Mic — mobile only, sits just above the input box */}
+                  <div className="flex md:hidden items-center justify-center mb-5">
+                    <div className="relative flex items-center justify-center">
+                      {isListening && (
+                        <>
+                          <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }} />
+                          <span className="absolute rounded-full animate-ping" style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }} />
+                        </>
+                      )}
+                      <button
+                        onClick={toggleVoice}
+                        data-testid="button-mic-center"
+                        className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
+                        style={{
+                          backgroundColor: "#ffffff",
+                          border: "2px solid #e5e5e5",
+                          boxShadow: isListening ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)" : "0 2px 8px rgba(0,0,0,0.12)",
+                        }}
+                      >
+                        <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
+                      </button>
+                      <button
+                        onClick={toggleVoice}
+                        className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
+                        style={{ left: "calc(50% + 40px)", color: isListening ? "#1DB954" : "#c4c0bb", whiteSpace: "nowrap" }}
+                      >
+                        {isListening ? t.listening : t.clickToSpeak}
+                      </button>
+                    </div>
+                  </div>
+
                   {usageWarning()}
                   {inputBox("")}
                   {platformHint()}
