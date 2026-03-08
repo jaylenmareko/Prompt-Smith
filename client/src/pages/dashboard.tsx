@@ -385,31 +385,17 @@ export default function DashboardPage() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition || !shouldListenRef.current) return;
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    // Detect iOS — includes modern iPads that report MacIntel with touch
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
     const recognition = new SpeechRecognition();
-    // iOS silently drops results with continuous:true — keep false on iOS only.
-    // Android Chrome and desktop work correctly with continuous:true.
+    // iOS Safari does not support continuous:true reliably — use single-shot sessions.
+    // On iOS, we do NOT auto-restart after onend because iOS blocks non-user-gesture
+    // start() calls silently. User taps mic again for each new session.
     recognition.continuous = !isIOS;
     recognition.interimResults = true;
     recognition.lang = LANG_CODES[lang] ?? "en-US";
-
-    // If onstart doesn't fire within 1s, iOS silently blocked the restart.
-    // Reset state so the user can tap to try again instead of being stuck.
-    startFailureTimerRef.current = setTimeout(() => {
-      if (shouldListenRef.current && recognitionRef.current === recognition) {
-        shouldListenRef.current = false;
-        recognitionRef.current = null;
-        setIsListening(false);
-      }
-    }, 1000);
-
-    recognition.onstart = () => {
-      // Confirmed started — clear the failure watchdog
-      if (startFailureTimerRef.current) {
-        clearTimeout(startFailureTimerRef.current);
-        startFailureTimerRef.current = null;
-      }
-    };
 
     recognition.onresult = (event: any) => {
       let interim = "";
@@ -425,29 +411,28 @@ export default function DashboardPage() {
     };
 
     recognition.onerror = (event: any) => {
-      if (startFailureTimerRef.current) {
-        clearTimeout(startFailureTimerRef.current);
-        startFailureTimerRef.current = null;
-      }
       if (event.error === "not-allowed" || event.error === "audio-capture" || event.error === "service-not-allowed") {
         shouldListenRef.current = false;
         setIsListening(false);
       }
-      // Transient errors (no-speech, network, aborted) — let onend handle restart
+      // no-speech / aborted — let onend handle
     };
 
     recognition.onend = () => {
-      if (startFailureTimerRef.current) {
-        clearTimeout(startFailureTimerRef.current);
-        startFailureTimerRef.current = null;
-      }
+      clearAllTimers();
       recognitionRef.current = null;
       if (!shouldListenRef.current) {
         setIsListening(false);
         return;
       }
-      // Delay before restarting — iOS needs a gap; longer to reduce silent-block risk
-      restartTimerRef.current = setTimeout(startRecognition, 300);
+      if (isIOS) {
+        // iOS blocks non-user-gesture start() — stop cleanly so user can tap again
+        shouldListenRef.current = false;
+        setIsListening(false);
+      } else {
+        // Android / desktop — auto-restart works fine
+        restartTimerRef.current = setTimeout(startRecognition, 150);
+      }
     };
 
     recognitionRef.current = recognition;
