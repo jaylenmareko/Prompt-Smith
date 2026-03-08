@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Copy, Bookmark, Loader2, Sparkles, User, X } from "lucide-react";
+import { Mic, Send, Copy, Bookmark, Loader2, Sparkles, User, X, Menu } from "lucide-react";
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
@@ -558,7 +558,15 @@ export default function DashboardPage() {
             className="flex items-center gap-2 px-4 h-12 shrink-0"
             style={{ borderBottom: "1px solid hsl(var(--border))", backgroundColor: "hsl(var(--background))" }}
           >
-            {!sidebarOpen && <SidebarTrigger className="text-stone-400" />}
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-muted"
+                style={{ color: "hsl(var(--muted-foreground))" }}
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+            )}
             {detectedTool && hasMessages && (
               <span
                 className="text-xs px-2 py-0.5 rounded-full"
