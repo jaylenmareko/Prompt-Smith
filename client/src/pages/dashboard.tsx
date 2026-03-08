@@ -639,7 +639,7 @@ export default function DashboardPage() {
 
                 {/* Center block — title + mic centered together as a unit.
                     On mobile the large mb pushes mic down toward the input. */}
-                <div className="flex-1 md:flex-none flex flex-col items-center justify-center md:mb-10">
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-center pt-16 md:pt-0 md:mb-10">
                   <h2
                     className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-16 md:mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
