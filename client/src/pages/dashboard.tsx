@@ -523,7 +523,7 @@ export default function DashboardPage() {
         "--sidebar-width-icon": "3rem",
       } as React.CSSProperties}
     >
-      <div className="flex h-screen w-full bg-background">
+      <div className="flex h-[100dvh] w-full bg-background">
         {/* Mobile backdrop */}
         {isMobile && sidebarOpen && (
           <div
@@ -655,7 +655,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Input section — mobile: anchored at bottom; desktop: in-flow below mic */}
-                <div className="w-full max-w-2xl mx-auto pb-3">
+                <div className="w-full max-w-2xl mx-auto" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
                   {usageWarning()}
                   {inputBox("")}
                   {platformHint()}
