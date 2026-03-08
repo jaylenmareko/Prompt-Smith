@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Copy, Bookmark, Loader2, Sparkles, User, X, Menu } from "lucide-react";
+import { Mic, Send, Copy, Bookmark, Loader2, Sparkles, User, X, PanelLeft } from "lucide-react";
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
@@ -548,6 +548,7 @@ export default function DashboardPage() {
               onDeleteConversation={deleteConversation}
               onDeleteSavedPrompt={deleteSavedPrompt}
               onOpenLogin={openLogin}
+              onClose={() => setSidebarOpen(false)}
               user={user}
             />
           </div>
@@ -564,7 +565,7 @@ export default function DashboardPage() {
                 className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-muted"
                 style={{ color: "hsl(var(--muted-foreground))" }}
               >
-                <Menu className="w-4 h-4" />
+                <PanelLeft className="w-4 h-4" />
               </button>
             )}
             {detectedTool && hasMessages && (

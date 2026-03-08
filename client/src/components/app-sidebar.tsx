@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Trash2, Settings, User, LogIn, LogOut, ChevronRight,
-  Zap, Plus, Search, Bookmark, MessageSquare, Sun, Moon, Check,
+  Zap, Plus, Search, Bookmark, MessageSquare, Sun, Moon, Check, PanelLeft,
 } from "lucide-react";
 import { isToday, isYesterday, isWithinInterval, subDays } from "date-fns";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { queryClient } from "@/lib/queryClient";
@@ -41,6 +40,7 @@ interface AppSidebarProps {
   onDeleteConversation: (id: string) => void;
   onDeleteSavedPrompt: (id: string) => void;
   onOpenLogin: (mode: "login" | "signup") => void;
+  onClose: () => void;
   user: Profile | null | undefined;
 }
 
@@ -54,6 +54,7 @@ export function AppSidebar({
   onDeleteConversation,
   onDeleteSavedPrompt,
   onOpenLogin,
+  onClose,
   user,
 }: AppSidebarProps) {
   const [, setLocation] = useLocation();
@@ -261,7 +262,13 @@ export function AppSidebar({
           >
             Prompt Smith
           </button>
-          <SidebarTrigger className="w-8 h-8 rounded-lg" style={{ color: MUTFG } as any} />
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors hover:bg-secondary"
+            style={{ color: MUTFG }}
+          >
+            <PanelLeft className="w-4 h-4" />
+          </button>
         </div>
 
         {/* New chat + Search */}
