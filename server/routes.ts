@@ -6,6 +6,15 @@ import passport from "passport";
 import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit";
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  message: { message: "Too many attempts, please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 async function sendResetEmail(to: string, resetUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -85,7 +94,7 @@ export async function registerRoutes(
 ): Promise<Server> {
   setupAuth(app);
 
-  app.post("/api/auth/register", async (req, res) => {
+  app.post("/api/auth/register", authLimiter, async (req, res) => {
     try {
       const { email, password } = req.body;
       if (!email || !password) return res.status(400).json({ message: "Email and password are required" });
@@ -104,7 +113,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/auth/login", (req, res, next) => {
+  app.post("/api/auth/login", authLimiter, (req, res, next) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) return res.status(500).json({ message: "Authentication error" });
       if (!user) return res.status(401).json({ message: info?.message || "Invalid credentials" });
@@ -163,7 +172,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/auth/forgot-password", async (req, res) => {
+  app.post("/api/auth/forgot-password", authLimiter, async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "Email is required" });
     try {
@@ -229,6 +238,7 @@ export async function registerRoutes(
     try {
       const { input, targetTool: selectedTool } = req.body;
       if (!input) return res.status(400).json({ message: "Input is required" });
+      if (typeof input !== "string" || input.length > 2000) return res.status(400).json({ message: "Input must be 2000 characters or less" });
 
       const GUEST_DAILY_LIMIT = 5;
       const sess = req.session as any;
