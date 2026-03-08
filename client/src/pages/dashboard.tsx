@@ -89,6 +89,7 @@ export default function DashboardPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startFailureTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
@@ -367,12 +368,14 @@ export default function DashboardPage() {
     setSaveDialogOpen(false);
   };
 
+  const clearAllTimers = () => {
+    if (restartTimerRef.current) { clearTimeout(restartTimerRef.current); restartTimerRef.current = null; }
+    if (startFailureTimerRef.current) { clearTimeout(startFailureTimerRef.current); startFailureTimerRef.current = null; }
+  };
+
   const stopVoice = () => {
     shouldListenRef.current = false;
-    if (restartTimerRef.current) {
-      clearTimeout(restartTimerRef.current);
-      restartTimerRef.current = null;
-    }
+    clearAllTimers();
     try { recognitionRef.current?.stop(); } catch {}
     recognitionRef.current = null;
     setIsListening(false);
@@ -382,13 +385,31 @@ export default function DashboardPage() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition || !shouldListenRef.current) return;
 
-    const recognition = new SpeechRecognition();
-    // iOS Safari silently drops results with continuous:true — use false on iOS only.
-    // On Android Chrome and desktop, continuous:true gives real-time interim results.
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const recognition = new SpeechRecognition();
+    // iOS silently drops results with continuous:true — keep false on iOS only.
+    // Android Chrome and desktop work correctly with continuous:true.
     recognition.continuous = !isIOS;
     recognition.interimResults = true;
     recognition.lang = LANG_CODES[lang] ?? "en-US";
+
+    // If onstart doesn't fire within 1s, iOS silently blocked the restart.
+    // Reset state so the user can tap to try again instead of being stuck.
+    startFailureTimerRef.current = setTimeout(() => {
+      if (shouldListenRef.current && recognitionRef.current === recognition) {
+        shouldListenRef.current = false;
+        recognitionRef.current = null;
+        setIsListening(false);
+      }
+    }, 1000);
+
+    recognition.onstart = () => {
+      // Confirmed started — clear the failure watchdog
+      if (startFailureTimerRef.current) {
+        clearTimeout(startFailureTimerRef.current);
+        startFailureTimerRef.current = null;
+      }
+    };
 
     recognition.onresult = (event: any) => {
       let interim = "";
@@ -404,7 +425,10 @@ export default function DashboardPage() {
     };
 
     recognition.onerror = (event: any) => {
-      // Fatal errors — stop completely
+      if (startFailureTimerRef.current) {
+        clearTimeout(startFailureTimerRef.current);
+        startFailureTimerRef.current = null;
+      }
       if (event.error === "not-allowed" || event.error === "audio-capture" || event.error === "service-not-allowed") {
         shouldListenRef.current = false;
         setIsListening(false);
@@ -413,20 +437,24 @@ export default function DashboardPage() {
     };
 
     recognition.onend = () => {
+      if (startFailureTimerRef.current) {
+        clearTimeout(startFailureTimerRef.current);
+        startFailureTimerRef.current = null;
+      }
       recognitionRef.current = null;
       if (!shouldListenRef.current) {
         setIsListening(false);
         return;
       }
-      // Small delay before restarting — iOS needs a brief gap between sessions
-      restartTimerRef.current = setTimeout(startRecognition, 100);
+      // Delay before restarting — iOS needs a gap; longer to reduce silent-block risk
+      restartTimerRef.current = setTimeout(startRecognition, 300);
     };
 
     recognitionRef.current = recognition;
     try {
       recognition.start();
     } catch {
-      // start() can throw if browser won't allow it; clean up so user can try again
+      clearAllTimers();
       recognitionRef.current = null;
       shouldListenRef.current = false;
       setIsListening(false);
@@ -639,7 +667,7 @@ export default function DashboardPage() {
 
                 {/* Center block — title + mic centered together as a unit.
                     On mobile the large mb pushes mic down toward the input. */}
-                <div className="flex-1 md:flex-none flex flex-col items-center justify-center pt-16 md:pt-0 md:mb-10">
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-center pt-28 md:pt-0 md:mb-10">
                   <h2
                     className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-16 md:mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
