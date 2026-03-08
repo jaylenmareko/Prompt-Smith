@@ -637,18 +637,19 @@ export default function DashboardPage() {
             {!hasMessages ? (
               <div className="flex-1 flex flex-col relative px-6 md:justify-center">
 
-                {/* MOBILE: title centered alone; DESKTOP: title+mic centered together */}
-                <div className="flex-1 md:flex-none flex flex-col items-center justify-center md:mb-10">
+                {/* Center block — mobile: title top / mic bottom using justify-between
+                                   desktop: title + mic centered together */}
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-between md:justify-center pt-6 pb-6 md:pt-0 md:pb-0 md:mb-10">
                   <h2
-                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-0 md:mb-8"
+                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl md:mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
                     data-testid="text-welcome-heading"
                   >
                     {t.welcomeHeading}
                   </h2>
 
-                  {/* Mic — desktop only in the center block */}
-                  <div className="hidden md:flex relative items-center justify-center mt-8">
+                  {/* Mic — both mobile and desktop, sits at bottom of center block on mobile */}
+                  <div className="relative flex items-center justify-center">
                     {isListening && (
                       <>
                         <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }} />
@@ -677,40 +678,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Input section — mic lives here on mobile (above input), desktop mic is above */}
+                {/* Input section — bottom of screen */}
                 <div className="w-full max-w-2xl mx-auto" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
-
-                  {/* Mic — mobile only, sits just above the input box */}
-                  <div className="flex md:hidden items-center justify-center mb-5">
-                    <div className="relative flex items-center justify-center">
-                      {isListening && (
-                        <>
-                          <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }} />
-                          <span className="absolute rounded-full animate-ping" style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }} />
-                        </>
-                      )}
-                      <button
-                        onClick={toggleVoice}
-                        data-testid="button-mic-center"
-                        className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
-                        style={{
-                          backgroundColor: "#ffffff",
-                          border: "2px solid #e5e5e5",
-                          boxShadow: isListening ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)" : "0 2px 8px rgba(0,0,0,0.12)",
-                        }}
-                      >
-                        <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
-                      </button>
-                      <button
-                        onClick={toggleVoice}
-                        className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
-                        style={{ left: "calc(50% + 40px)", color: isListening ? "#1DB954" : "#c4c0bb", whiteSpace: "nowrap" }}
-                      >
-                        {isListening ? t.listening : t.clickToSpeak}
-                      </button>
-                    </div>
-                  </div>
-
                   {usageWarning()}
                   {inputBox("")}
                   {platformHint()}
