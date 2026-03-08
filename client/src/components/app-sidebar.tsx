@@ -283,35 +283,78 @@ export function AppSidebar({
             <Plus className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
             {t.newChat}
           </button>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: MUT }}>
+
+          {/* Search inputs — clicking opens login for guests */}
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer"
+            style={{ backgroundColor: MUT }}
+            onClick={() => { if (!user) onOpenLogin("login"); }}
+          >
             <Search className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={t.searchChats}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
-              style={{ color: FG }}
-            />
+            {user ? (
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={t.searchChats}
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
+                style={{ color: FG }}
+              />
+            ) : (
+              <span className="flex-1 text-sm" style={{ color: MUTFG }}>{t.searchChats}</span>
+            )}
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: MUT }}>
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer"
+            style={{ backgroundColor: MUT }}
+            onClick={() => { if (!user) onOpenLogin("login"); }}
+          >
             <Search className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
-            <input
-              type="text"
-              value={searchPrompts}
-              onChange={e => setSearchPrompts(e.target.value)}
-              placeholder={t.searchSavedPrompts}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
-              style={{ color: FG }}
-            />
+            {user ? (
+              <input
+                type="text"
+                value={searchPrompts}
+                onChange={e => setSearchPrompts(e.target.value)}
+                placeholder={t.searchSavedPrompts}
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
+                style={{ color: FG }}
+              />
+            ) : (
+              <span className="flex-1 text-sm" style={{ color: MUTFG }}>{t.searchSavedPrompts}</span>
+            )}
           </div>
         </div>
 
         {/* Content */}
         <ScrollArea className="flex-1 px-2">
           <div className="pb-4">
-            {/* Saved Prompts */}
-            <div className="mt-3">
+
+            {/* Guest teaser — shown instead of history when not logged in */}
+            {!user && (
+              <div className="mx-1 mt-4 rounded-xl p-4 text-center" style={{ backgroundColor: MUT, border: `1px solid ${BORDER}` }}>
+                <p className="text-sm font-medium mb-1" style={{ color: FG }}>Save your history</p>
+                <p className="text-xs mb-4" style={{ color: MUTFG }}>Sign in to keep your chats and saved prompts across sessions.</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => onOpenLogin("signup")}
+                    className="w-full text-xs py-2 rounded-lg font-medium"
+                    style={{ backgroundColor: FG, color: BG }}
+                  >
+                    {t.signUpFree}
+                  </button>
+                  <button
+                    onClick={() => onOpenLogin("login")}
+                    className="w-full text-xs py-2 rounded-lg font-medium border"
+                    style={{ color: FG, borderColor: BORDER, backgroundColor: "transparent" }}
+                  >
+                    {t.logIn}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Saved Prompts — logged-in only */}
+            {user && <div className="mt-3">
               <button
                 onClick={() => setSavedOpen(o => !o)}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -362,10 +405,10 @@ export function AppSidebar({
                   </button>
                 ));
               })()}
-            </div>
+            </div>}
 
-            {/* Chats */}
-            <div className="mt-4">
+            {/* Chats — logged-in only */}
+            {user && <div className="mt-4">
               <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium" style={{ color: FG }}>
                 <MessageSquare className="w-4 h-4 shrink-0" style={{ color: MUTFG }} />
                 {t.chats}
@@ -420,7 +463,7 @@ export function AppSidebar({
                   </div>
                 ));
               })()}
-            </div>
+            </div>}
           </div>
         </ScrollArea>
 
