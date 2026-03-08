@@ -652,17 +652,17 @@ export default function DashboardPage() {
 
                 {/* Center block — title + mic centered together as a unit.
                     On mobile the large mb pushes mic down toward the input. */}
-                <div className="flex-1 md:flex-none flex flex-col items-center justify-center pt-28 md:pt-0 md:mb-10">
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-center md:mb-10">
                   <h2
-                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-16 md:mb-8"
+                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-0 md:mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
                     data-testid="text-welcome-heading"
                   >
                     {t.welcomeHeading}
                   </h2>
 
-                  {/* Mic — both mobile and desktop, sits at bottom of center block on mobile */}
-                  <div className="relative flex items-center justify-center">
+                  {/* Mic — desktop only */}
+                  <div className="hidden md:flex relative items-center justify-center">
                     {isListening && (
                       <>
                         <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }} />
