@@ -637,11 +637,11 @@ export default function DashboardPage() {
             {!hasMessages ? (
               <div className="flex-1 flex flex-col relative px-6 md:justify-center">
 
-                {/* Center block — mobile: title top / mic bottom using justify-between
-                                   desktop: title + mic centered together */}
-                <div className="flex-1 md:flex-none flex flex-col items-center justify-between md:justify-center pt-6 pb-6 md:pt-0 md:pb-0 md:mb-10">
+                {/* Center block — title + mic centered together as a unit.
+                    On mobile the large mb pushes mic down toward the input. */}
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-center md:mb-10">
                   <h2
-                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl md:mb-8"
+                    className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-16 md:mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
                     data-testid="text-welcome-heading"
                   >
