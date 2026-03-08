@@ -600,9 +600,9 @@ export default function DashboardPage() {
 
           <main className="flex-1 flex flex-col overflow-hidden">
             {!hasMessages ? (
-              <div className="flex-1 flex flex-col relative px-6">
-                {/* Center block — heading + mic vertically centered in available space */}
-                <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="flex-1 flex flex-col relative px-6 md:justify-center">
+                {/* Center block — mobile: takes all space and centers; desktop: in-flow */}
+                <div className="flex-1 md:flex-none flex flex-col items-center justify-center md:mb-10">
                   <h2
                     className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-8"
                     style={{ color: "hsl(var(--foreground))" }}
@@ -639,10 +639,10 @@ export default function DashboardPage() {
                       <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
                     </button>
 
-                    {/* Speak hint — desktop only */}
+                    {/* Speak hint — all screen sizes */}
                     <button
                       onClick={toggleVoice}
-                      className={`absolute text-xs transition-colors hidden sm:block ${!isListening ? "animate-flicker" : ""}`}
+                      className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
                       style={{
                         left: "calc(50% + 40px)",
                         color: isListening ? "#1DB954" : "#c4c0bb",
@@ -654,8 +654,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Bottom section — input + hint + pills, always in frame */}
-                <div className="w-full max-w-2xl mx-auto pb-6">
+                {/* Input section — mobile: anchored at bottom; desktop: in-flow below mic */}
+                <div className="w-full max-w-2xl mx-auto pb-3">
                   {usageWarning()}
                   {inputBox("")}
                   {platformHint()}
