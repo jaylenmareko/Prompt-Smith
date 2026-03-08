@@ -599,17 +599,18 @@ export default function DashboardPage() {
 
           <main className="flex-1 flex flex-col overflow-hidden">
             {!hasMessages ? (
-              <div className="flex-1 flex flex-col items-center justify-center px-6 relative">
+              <div className="flex-1 flex flex-col items-center px-6 relative justify-between pt-10 pb-6 md:justify-center md:pt-0 md:pb-0">
+                {/* Heading — top on mobile, in-flow on desktop */}
                 <h2
-                  className="text-xl md:text-3xl font-light text-center mb-6 md:mb-10 leading-relaxed max-w-xl"
+                  className="text-xl md:text-3xl font-light text-center leading-relaxed max-w-xl mb-0 md:mb-10"
                   style={{ color: "hsl(var(--foreground))" }}
                   data-testid="text-welcome-heading"
                 >
                   {t.welcomeHeading}
                 </h2>
 
-                <div className="relative flex items-center justify-center mb-10">
-                  {/* Pulsing ring — only when listening */}
+                {/* Mic — centered in remaining space on mobile, in-flow on desktop */}
+                <div className="relative flex items-center justify-center md:mb-10">
                   {isListening && (
                     <>
                       <span
@@ -637,7 +638,7 @@ export default function DashboardPage() {
                     <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
                   </button>
 
-                  {/* Speak hint — floats to the right of the mic, hidden on small screens */}
+                  {/* Speak hint — desktop only */}
                   <button
                     onClick={toggleVoice}
                     className={`absolute text-xs transition-colors hidden sm:block ${!isListening ? "animate-flicker" : ""}`}
@@ -651,6 +652,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
+                {/* Input section — bottom on mobile, in-flow on desktop */}
                 <div className="w-full max-w-2xl">
                   {usageWarning()}
                   {inputBox("")}
@@ -658,7 +660,7 @@ export default function DashboardPage() {
                   {toolPills("welcome")}
                 </div>
 
-                {/* Powered by Claude — bottom-left of landing page, hidden on mobile */}
+                {/* Powered by Claude — desktop only */}
                 <div className="absolute bottom-4 left-4 hidden sm:flex items-center gap-1.5">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "hsl(var(--muted-foreground))" }} />
