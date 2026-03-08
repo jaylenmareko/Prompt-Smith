@@ -88,6 +88,7 @@ export default function DashboardPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
@@ -353,20 +354,26 @@ export default function DashboardPage() {
 
   const stopVoice = () => {
     shouldListenRef.current = false;
-    recognitionRef.current?.stop();
+    if (restartTimerRef.current) {
+      clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+    }
+    try { recognitionRef.current?.stop(); } catch {}
+    recognitionRef.current = null;
     setIsListening(false);
   };
 
   const startRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition || !shouldListenRef.current) return;
 
     const recognition = new SpeechRecognition();
-    // continuous:false is required for iOS Safari — it doesn't fire results with continuous:true.
-    // We simulate continuous listening by creating a fresh instance in onend.
+    // continuous:false required for iOS — with true, iOS never fires onresult.
+    // We simulate continuous listening by spawning a fresh instance after each session.
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = LANG_CODES[lang] ?? "en-US";
+
     recognition.onresult = (event: any) => {
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -379,24 +386,35 @@ export default function DashboardPage() {
       }
       setInputValue(committedRef.current + (interim ? (committedRef.current ? " " : "") + interim : ""));
     };
+
     recognition.onerror = (event: any) => {
-      // Only stop on user-aborted; ignore no-speech and other transient errors
-      if (event.error === "aborted" || event.error === "not-allowed") {
+      // Fatal errors — stop completely
+      if (event.error === "not-allowed" || event.error === "audio-capture" || event.error === "service-not-allowed") {
         shouldListenRef.current = false;
         setIsListening(false);
       }
+      // Transient errors (no-speech, network, aborted) — let onend handle restart
     };
+
     recognition.onend = () => {
-      // Always create a fresh instance — calling .start() on an ended instance
-      // throws InvalidStateError on iOS Safari and silently fails on Android.
-      if (shouldListenRef.current) {
-        startRecognition();
-      } else {
+      recognitionRef.current = null;
+      if (!shouldListenRef.current) {
         setIsListening(false);
+        return;
       }
+      // Delay before restarting — iOS Safari blocks back-to-back starts without a gap
+      restartTimerRef.current = setTimeout(startRecognition, 200);
     };
+
     recognitionRef.current = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      // start() can throw if browser won't allow it; clean up so user can try again
+      recognitionRef.current = null;
+      shouldListenRef.current = false;
+      setIsListening(false);
+    }
   };
 
   const toggleVoice = () => {
