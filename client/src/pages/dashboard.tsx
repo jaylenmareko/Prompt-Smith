@@ -294,10 +294,25 @@ export default function DashboardPage() {
         }
       }
 
+      const isClarification = fullContent.trimStart().startsWith("CLARIFY:");
+      const displayContent = isClarification
+        ? fullContent.trimStart().replace(/^CLARIFY:\s*/i, "")
+        : fullContent;
+
+      // Update the streamed message with final flags
+      setMessages(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last?.id === assistantMsgId) {
+          updated[updated.length - 1] = { ...last, content: displayContent, isStreaming: false, isClarification };
+        }
+        return updated;
+      });
+
       const finalMessages: LocalMessage[] = [
         ...priorMessages,
         userMsg,
-        { id: assistantMsgId, role: "assistant", content: fullContent, targetTool: tool, isStreaming: false },
+        { id: assistantMsgId, role: "assistant", content: displayContent, targetTool: tool, isStreaming: false, isClarification },
       ];
       persistConversation(convId, title, finalMessages);
       if (user) queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
@@ -368,9 +383,10 @@ export default function DashboardPage() {
     if (!SpeechRecognition || !shouldListenRef.current) return;
 
     const recognition = new SpeechRecognition();
-    // continuous:false required for iOS — with true, iOS never fires onresult.
-    // We simulate continuous listening by spawning a fresh instance after each session.
-    recognition.continuous = false;
+    // iOS Safari silently drops results with continuous:true — use false on iOS only.
+    // On Android Chrome and desktop, continuous:true gives real-time interim results.
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    recognition.continuous = !isIOS;
     recognition.interimResults = true;
     recognition.lang = LANG_CODES[lang] ?? "en-US";
 
@@ -402,8 +418,8 @@ export default function DashboardPage() {
         setIsListening(false);
         return;
       }
-      // Delay before restarting — iOS Safari blocks back-to-back starts without a gap
-      restartTimerRef.current = setTimeout(startRecognition, 200);
+      // Small delay before restarting — iOS needs a brief gap between sessions
+      restartTimerRef.current = setTimeout(startRecognition, 100);
     };
 
     recognitionRef.current = recognition;
@@ -782,7 +798,7 @@ export default function DashboardPage() {
                               </>
                             )}
                           </div>
-                          {msg.role === "assistant" && !msg.isStreaming && msg.content && (
+                          {msg.role === "assistant" && !msg.isStreaming && msg.content && !msg.isClarification && (
                             <div className="flex gap-1 mt-1.5">
                               <Button
                                 size="sm" variant="ghost"

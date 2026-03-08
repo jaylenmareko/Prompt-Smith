@@ -4,6 +4,7 @@ export interface LocalMessage {
   content: string;
   targetTool?: string | null;
   isStreaming?: boolean;
+  isClarification?: boolean;
 }
 
 export interface LocalConversation {
