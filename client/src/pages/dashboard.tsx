@@ -493,7 +493,7 @@ export default function DashboardPage() {
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 13V4M8 4L3.5 8.5M8 4L12.5 8.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         )}
       </button>
