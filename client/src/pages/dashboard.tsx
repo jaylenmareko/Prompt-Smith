@@ -184,7 +184,7 @@ const [inputValue, setInputValue] = useState("");
       setDetectedTool(conv.messages.find(m => m.role === "assistant")?.targetTool || null);
     }
     if (isMobile) setSidebarOpen(false);
-  }, [isMobile]);
+  }, [isMobile, user?.id]);
 
   const loadSavedPrompt = useCallback((prompt: LocalSavedPrompt) => {
     setInputValue(prompt.userInput);
