@@ -44,6 +44,74 @@ interface AppSidebarProps {
   user: Profile | null | undefined;
 }
 
+function BillingSection({ planLabel, remainingLabel, onNavigatePricing, FG, BG, MUT, MUTFG, BORDER }: {
+  planLabel: string;
+  remainingLabel: string | null;
+  onNavigatePricing: () => void;
+  FG: string; BG: string; MUT: string; MUTFG: string; BORDER: string;
+}) {
+  const { toast } = useToast();
+  const [portalLoading, setPortalLoading] = useState(false);
+  const isPaid = planLabel === "Starter" || planLabel === "Pro";
+
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/stripe/create-portal-session", { method: "POST" });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else throw new Error(data.message || "No portal URL");
+    } catch (err: any) {
+      toast({ title: "Failed to open billing portal", description: err.message, variant: "destructive" });
+      setPortalLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>Current plan</p>
+        <div className="rounded-xl p-4 border" style={{ borderColor: BORDER, backgroundColor: MUT }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: FG }}>{planLabel || "Free"}</p>
+              {remainingLabel && (
+                <p className="text-xs mt-0.5" style={{ color: MUTFG }}>{remainingLabel}</p>
+              )}
+            </div>
+            {!isPaid && (
+              <button
+                onClick={onNavigatePricing}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ backgroundColor: FG, color: BG }}
+              >
+                Upgrade
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {isPaid && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: MUTFG }}>Manage subscription</p>
+          <p className="text-xs mb-3" style={{ color: MUTFG }}>
+            Update your payment method, view invoices, or cancel your subscription.
+          </p>
+          <button
+            onClick={handlePortal}
+            disabled={portalLoading}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors border disabled:opacity-40"
+            style={{ color: FG, borderColor: BORDER, backgroundColor: "transparent" }}
+          >
+            {portalLoading ? "Loading..." : "Open billing portal"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AppSidebar({
   conversations,
   savedPrompts,
@@ -734,24 +802,12 @@ export function AppSidebar({
 
               {/* ── BILLING ── */}
               {settingsSection === "billing" && (
-                <div className="p-6">
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: MUTFG }}>{t.subscription}</p>
-                  <div className="rounded-xl p-4 border mb-4" style={{ borderColor: BORDER, backgroundColor: MUT }}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium" style={{ color: FG }}>{t.currentPlan}</p>
-                        <p className="text-xs mt-0.5" style={{ color: MUTFG }}>{planLabel || "Free"}</p>
-                      </div>
-                      <button
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                        style={{ backgroundColor: FG, color: BG }}
-                      >
-                        {t.upgrade}
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-xs" style={{ color: MUTFG }}>{t.billingComingSoon}</p>
-                </div>
+                <BillingSection
+                  planLabel={planLabel}
+                  remainingLabel={remainingLabel}
+                  onNavigatePricing={() => { setSettingsOpen(false); setLocation("/pricing"); }}
+                  FG={FG} BG={BG} MUT={MUT} MUTFG={MUTFG} BORDER={BORDER}
+                />
               )}
 
             </div>
