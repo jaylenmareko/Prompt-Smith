@@ -117,10 +117,7 @@ export default function PricingPage() {
                   backgroundColor: "hsl(var(--card))",
                   border: isSelected || isCurrentPlan
                     ? "2px solid hsl(var(--foreground))"
-                    : plan.popular
-                    ? "2px solid hsl(var(--foreground))"
                     : "1px solid hsl(var(--border))",
-                  opacity: isSelected || isCurrentPlan || plan.popular ? 1 : 0.85,
                 }}
               >
                 {plan.popular && (
