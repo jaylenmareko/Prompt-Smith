@@ -652,7 +652,7 @@ export default function DashboardPage() {
 
                 {/* Mobile: title absolutely centered on screen */}
                 <h2
-                  className="md:hidden absolute left-0 right-0 top-1/2 -translate-y-1/2 text-xl font-light text-center leading-relaxed px-6 pointer-events-none"
+                  className="md:hidden absolute left-0 right-0 top-[38%] -translate-y-1/2 text-xl font-light text-center leading-relaxed px-6 pointer-events-none"
                   style={{ color: "hsl(var(--foreground))" }}
                   data-testid="text-welcome-heading"
                 >
