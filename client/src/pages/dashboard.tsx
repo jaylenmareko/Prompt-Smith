@@ -144,10 +144,12 @@ const [inputValue, setInputValue] = useState("");
 
   useEffect(() => { fetchGuestUsage(); }, [fetchGuestUsage]);
 
-  // Show login modal almost instantly for guests
+  // Show login modal once per session for guests
   useEffect(() => {
     if (authLoading) return;
     if (user) return;
+    if (sessionStorage.getItem("ps_nudge_shown")) return;
+    sessionStorage.setItem("ps_nudge_shown", "1");
     const t = setTimeout(() => openLogin("login"), 400);
     return () => clearTimeout(t);
   }, [authLoading, user]);
