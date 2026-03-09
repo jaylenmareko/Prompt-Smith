@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useLocation } from "wouter";
 import { Check, ArrowLeft, Zap } from "lucide-react";
@@ -8,7 +9,7 @@ const PLANS = [
     price: "$0",
     period: "",
     limit: "5 prompts per day",
-    features: ["5 prompts/day", "All AI tools", "Voice input", "Copy & paste"],
+    features: ["5 prompts/day", "All AI tools", "Copy & paste"],
     key: "free",
     popular: false,
   },
@@ -16,18 +17,18 @@ const PLANS = [
     name: "Starter",
     price: "$2",
     period: "/month",
-    limit: "500 prompts per month",
-    features: ["500 prompts/month", "All AI tools", "Voice input", "Save prompts", "No daily cap"],
+    limit: "30 prompts per day",
+    features: ["30 prompts/day", "All AI tools", "Save prompts", "No monthly cap"],
     key: "starter",
     popular: false,
   },
   {
-    name: "Unlimited",
-    price: "$8",
+    name: "Pro",
+    price: "$12",
     period: "/month",
     limit: "Unlimited prompts",
-    features: ["Unlimited prompts", "All AI tools", "Voice input", "Save prompts", "No daily cap", "Early access to features"],
-    key: "unlimited",
+    features: ["Unlimited prompts", "All AI tools", "Save prompts", "Early access to features"],
+    key: "pro",
     popular: true,
   },
 ];
@@ -35,13 +36,42 @@ const PLANS = [
 export default function PricingPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const handleUpgrade = async (planKey: string) => {
+    if (!user) { setLocation("/"); return; }
+    setLoading(planKey);
+    try {
+      const res = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planKey }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      setLoading(null);
+    }
+  };
+
+  const handleManage = async () => {
+    setLoading("portal");
+    try {
+      const res = await fetch("/api/stripe/create-portal-session", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      setLoading(null);
+    }
+  };
+
+  const isPaid = user?.plan === "starter" || user?.plan === "pro";
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "hsl(var(--background))" }}>
       <div className="max-w-4xl mx-auto px-6 py-8">
         <button
           onClick={() => setLocation("/")}
-          data-testid="button-back"
           className="flex items-center gap-2 text-sm mb-10 transition-opacity hover:opacity-70"
           style={{ color: "hsl(var(--muted-foreground))" }}
         >
@@ -64,7 +94,6 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.key}
-                data-testid={`plan-card-${plan.key}`}
                 className="relative rounded-2xl p-6"
                 style={{
                   backgroundColor: "hsl(var(--card))",
@@ -118,8 +147,8 @@ export default function PricingPage() {
                 </div>
 
                 <button
-                  disabled={isCurrentPlan}
-                  data-testid={`button-select-${plan.key}`}
+                  disabled={isCurrentPlan || loading === plan.key}
+                  onClick={() => plan.key !== "free" && handleUpgrade(plan.key)}
                   className="w-full h-10 rounded-xl text-sm font-medium transition-opacity disabled:opacity-40"
                   style={
                     plan.popular
@@ -127,12 +156,25 @@ export default function PricingPage() {
                       : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--foreground))" }
                   }
                 >
-                  {isCurrentPlan ? "Current plan" : plan.key === "free" ? "Get started" : "Upgrade"}
+                  {loading === plan.key ? "Loading..." : isCurrentPlan ? "Current plan" : plan.key === "free" ? "Get started" : "Upgrade"}
                 </button>
               </div>
             );
           })}
         </div>
+
+        {isPaid && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={handleManage}
+              disabled={loading === "portal"}
+              className="text-sm underline underline-offset-2 transition-opacity hover:opacity-70"
+              style={{ color: "hsl(var(--muted-foreground))" }}
+            >
+              {loading === "portal" ? "Loading..." : "Manage or cancel subscription"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

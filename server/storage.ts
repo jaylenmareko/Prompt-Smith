@@ -5,8 +5,9 @@ import { eq, desc, and } from "drizzle-orm";
 
 const PLAN_LIMITS: Record<string, { daily: number | null; monthly: number | null }> = {
   free:      { daily: 5,    monthly: null },
-  starter:   { daily: null, monthly: 500  },
-  unlimited: { daily: null, monthly: null },
+  starter:   { daily: 30,   monthly: null },
+  pro:       { daily: null, monthly: null },
+  unlimited: { daily: null, monthly: null }, // legacy alias
 };
 
 export interface IStorage {
@@ -17,6 +18,7 @@ export interface IStorage {
   checkAndIncrementUsage(id: number): Promise<{ allowed: boolean; reason?: "daily" | "monthly"; plan: string }>;
   setResetToken(email: string, token: string, expiry: string): Promise<void>;
   getProfileByResetToken(token: string): Promise<Profile | undefined>;
+  getProfileByStripeCustomerId(customerId: string): Promise<Profile | undefined>;
   clearResetToken(id: number): Promise<void>;
   incrementPromptUsage(id: number): Promise<void>;
   resetDailyUsage(id: number): Promise<void>;
@@ -189,6 +191,11 @@ export class DatabaseStorage implements IStorage {
 
   async getProfileByResetToken(token: string): Promise<Profile | undefined> {
     const [profile] = await db.select().from(profiles).where(eq(profiles.passwordResetToken, token));
+    return profile;
+  }
+
+  async getProfileByStripeCustomerId(customerId: string): Promise<Profile | undefined> {
+    const [profile] = await db.select().from(profiles).where(eq(profiles.stripeCustomerId, customerId));
     return profile;
   }
 

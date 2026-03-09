@@ -7,6 +7,19 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import crypto from "crypto";
 import rateLimit from "express-rate-limit";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-02-24.acacia" });
+
+const PRICE_IDS: Record<string, string> = {
+  starter: "price_1T971XPrOq2GucuYK25dGAX8",
+  pro:     "price_1T973APrOq2GucuY2LOLtiJL",
+};
+
+const PLAN_FROM_PRICE: Record<string, string> = {
+  "price_1T971XPrOq2GucuYK25dGAX8": "starter",
+  "price_1T973APrOq2GucuY2LOLtiJL": "pro",
+};
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -300,6 +313,103 @@ export async function registerRoutes(
         res.status(500).json({ message: error.message || "Generation failed" });
       }
     }
+  });
+
+  // ── Stripe: create checkout session ──────────────────────────────
+  app.post("/api/stripe/create-checkout-session", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const { plan } = req.body;
+    const priceId = PRICE_IDS[plan];
+    if (!priceId) return res.status(400).json({ message: "Invalid plan" });
+
+    const user = req.user as any;
+    const appUrl = process.env.APP_URL || "http://localhost:5000";
+
+    try {
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({ email: user.email });
+        customerId = customer.id;
+        await storage.updateProfile(user.id, { stripeCustomerId: customerId });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: "subscription",
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `${appUrl}/?checkout=success`,
+        cancel_url: `${appUrl}/pricing`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ── Stripe: customer portal ───────────────────────────────────────
+  app.post("/api/stripe/create-portal-session", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const user = req.user as any;
+    const appUrl = process.env.APP_URL || "http://localhost:5000";
+
+    try {
+      if (!user.stripeCustomerId) return res.status(400).json({ message: "No active subscription" });
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${appUrl}/`,
+      });
+      res.json({ url: session.url });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ── Stripe: webhook ───────────────────────────────────────────────
+  app.post("/api/stripe/webhook", async (req, res) => {
+    const sig = req.headers["stripe-signature"] as string;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    let event: Stripe.Event;
+
+    try {
+      const rawBody = (req as any).rawBody as Buffer;
+      if (webhookSecret && sig) {
+        event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+      } else {
+        event = req.body as Stripe.Event;
+      }
+    } catch (err: any) {
+      return res.status(400).send(`Webhook error: ${err.message}`);
+    }
+
+    try {
+      if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+        const sub = event.data.object as Stripe.Subscription;
+        const customerId = sub.customer as string;
+        const priceId = sub.items.data[0]?.price.id;
+        const plan = PLAN_FROM_PRICE[priceId] || "free";
+        const status = sub.status;
+        const activePlan = (status === "active" || status === "trialing") ? plan : "free";
+
+        const profiles = await storage.getProfileByStripeCustomerId(customerId);
+        if (profiles) {
+          await storage.updateProfile(profiles.id, { plan: activePlan, stripeSubscriptionId: sub.id });
+        }
+      }
+
+      if (event.type === "customer.subscription.deleted") {
+        const sub = event.data.object as Stripe.Subscription;
+        const customerId = sub.customer as string;
+        const profiles = await storage.getProfileByStripeCustomerId(customerId);
+        if (profiles) {
+          await storage.updateProfile(profiles.id, { plan: "free", stripeSubscriptionId: null });
+        }
+      }
+    } catch (err) {
+      console.error("Webhook handler error:", err);
+    }
+
+    res.json({ received: true });
   });
 
   return httpServer;
