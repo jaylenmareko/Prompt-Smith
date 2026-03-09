@@ -327,8 +327,8 @@ export function AppSidebar({
             className="flex items-center gap-2 px-1 hover:opacity-70 transition-opacity"
             data-testid="text-sidebar-logo"
           >
-            <img src="/favicon.svg" alt="Prompt Smith" className="w-9 h-9 shrink-0" />
-            <span className="text-sm font-semibold tracking-wide" style={{ color: FG }}>Prompt Smith</span>
+            <img src="/favicon.svg" alt="Prompt-Smith" className="w-11 h-11 shrink-0" />
+            <span className="text-sm font-semibold tracking-wide" style={{ color: FG }}>Prompt-Smith</span>
           </button>
           <button
             onClick={onClose}
