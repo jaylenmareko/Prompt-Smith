@@ -706,20 +706,20 @@ export default function DashboardPage() {
                       }}
                     >
                       {isListening ? (
-                        <svg width="31" height="20" viewBox="0 0 31 20" fill="none">
-                          <rect x="0" y="6" width="3" height="8" rx="1.5" fill="white"/>
-                          <rect x="7" y="2" width="3" height="16" rx="1.5" fill="white"/>
-                          <rect x="14" y="0" width="3" height="20" rx="1.5" fill="white"/>
-                          <rect x="21" y="2" width="3" height="16" rx="1.5" fill="white"/>
-                          <rect x="28" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                        <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
+                          <rect x="1.5" y="8"  width="3" height="8"  rx="1.5" fill="white"/>
+                          <rect x="8"   y="4"  width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="14.5" y="1" width="3" height="22" rx="1.5" fill="white"/>
+                          <rect x="21"  y="4"  width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="27.5" y="8" width="3" height="8"  rx="1.5" fill="white"/>
                         </svg>
                       ) : (
-                        <svg width="31" height="20" viewBox="0 0 31 20" fill="none">
-                          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="white"/>
-                          <rect x="7" y="5" width="3" height="10" rx="1.5" fill="white"/>
-                          <rect x="14" y="2" width="3" height="16" rx="1.5" fill="white"/>
-                          <rect x="21" y="5" width="3" height="10" rx="1.5" fill="white"/>
-                          <rect x="28" y="8" width="3" height="4" rx="1.5" fill="white"/>
+                        <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
+                          <rect x="1.5" y="9"  width="3" height="6"  rx="1.5" fill="white"/>
+                          <rect x="8"   y="5"  width="3" height="14" rx="1.5" fill="white"/>
+                          <rect x="14.5" y="1" width="3" height="22" rx="1.5" fill="white"/>
+                          <rect x="21"  y="5"  width="3" height="14" rx="1.5" fill="white"/>
+                          <rect x="27.5" y="9" width="3" height="6"  rx="1.5" fill="white"/>
                         </svg>
                       )}
                     </button>
