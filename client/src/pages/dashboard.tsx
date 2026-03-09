@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
@@ -56,6 +57,7 @@ function getStoredSavedPrompts(userId?: number): LocalSavedPrompt[] {
 
 export default function DashboardPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { t, lang } = useLanguage();
 
