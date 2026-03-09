@@ -698,30 +698,28 @@ export default function DashboardPage() {
                     <button
                       onClick={toggleVoice}
                       data-testid="button-mic-center"
-                      className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
+                      className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none shadow-sm"
                       style={{
-                        backgroundColor: "hsl(var(--muted))",
-                        border: "1px solid hsl(var(--border))",
-                        boxShadow: isListening ? "0 0 0 4px rgba(255,149,0,0.25)" : "none",
+                        background: "linear-gradient(180deg, #FF8243 0%, #FF3333 100%)",
+                        boxShadow: isListening ? "0 0 0 4px rgba(255,149,0,0.3)" : "none",
+                        border: "none",
                       }}
                     >
                       {isListening ? (
-                        <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
-                          <rect x="0" y="6" width="3" height="8" rx="1.5" fill="#FF9500"/>
-                          <rect x="5" y="2" width="3" height="16" rx="1.5" fill="#FF9500"/>
-                          <rect x="10" y="0" width="3" height="20" rx="1.5" fill="#FF9500"/>
-                          <rect x="15" y="2" width="3" height="16" rx="1.5" fill="#FF9500"/>
-                          <rect x="20" y="5" width="3" height="10" rx="1.5" fill="#FF9500"/>
-                          <rect x="25" y="7" width="3" height="6" rx="1.5" fill="#FF9500"/>
+                        <svg width="31" height="20" viewBox="0 0 31 20" fill="none">
+                          <rect x="0" y="6" width="3" height="8" rx="1.5" fill="white"/>
+                          <rect x="7" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="14" y="0" width="3" height="20" rx="1.5" fill="white"/>
+                          <rect x="21" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="28" y="5" width="3" height="10" rx="1.5" fill="white"/>
                         </svg>
                       ) : (
-                        <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
-                          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="#FF9500"/>
-                          <rect x="5" y="5" width="3" height="10" rx="1.5" fill="#FF9500"/>
-                          <rect x="10" y="2" width="3" height="16" rx="1.5" fill="#FF9500"/>
-                          <rect x="15" y="5" width="3" height="10" rx="1.5" fill="#FF9500"/>
-                          <rect x="20" y="7" width="3" height="6" rx="1.5" fill="#FF9500"/>
-                          <rect x="25" y="8" width="3" height="4" rx="1.5" fill="#FF9500"/>
+                        <svg width="31" height="20" viewBox="0 0 31 20" fill="none">
+                          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="white"/>
+                          <rect x="7" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="14" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="21" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="28" y="8" width="3" height="4" rx="1.5" fill="white"/>
                         </svg>
                       )}
                     </button>
