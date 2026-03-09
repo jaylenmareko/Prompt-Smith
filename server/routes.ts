@@ -254,15 +254,31 @@ export async function registerRoutes(
       if (typeof input !== "string" || input.length > 2000) return res.status(400).json({ message: "Input must be 2000 characters or less" });
 
       const GUEST_DAILY_LIMIT = 5;
+      const PLAN_LIMITS: Record<string, { daily: number | null; monthly: number | null }> = {
+        free:      { daily: 5,    monthly: null },
+        starter:   { daily: 30,   monthly: null },
+        pro:       { daily: null, monthly: null },
+        unlimited: { daily: null, monthly: null },
+      };
       const sess = req.session as any;
 
+      // Check limit only — increment happens after generation if not a clarification
       if (req.isAuthenticated()) {
-        const result = await storage.checkAndIncrementUsage((req.user as any).id);
-        if (!result.allowed) {
-          return res.status(429).json({ limitReached: true, reason: result.reason, plan: result.plan });
+        const profile = await storage.getProfile((req.user as any).id);
+        if (!profile) return res.status(401).json({ message: "Not authenticated" });
+        const today = new Date().toISOString().split("T")[0];
+        const currentMonth = today.substring(0, 7);
+        const limits = PLAN_LIMITS[profile.plan] ?? PLAN_LIMITS.free;
+        const dailyCount = profile.lastResetDate !== today ? 0 : profile.promptsUsedToday;
+        const monthlyCount = profile.lastMonthlyReset !== currentMonth ? 0 : profile.promptsUsedMonth;
+        if (limits.daily !== null && dailyCount >= limits.daily) {
+          return res.status(429).json({ limitReached: true, reason: "daily", plan: profile.plan });
+        }
+        if (limits.monthly !== null && monthlyCount >= limits.monthly) {
+          return res.status(429).json({ limitReached: true, reason: "monthly", plan: profile.plan });
         }
       } else {
-        // Guest: track daily usage in session
+        // Guest: check daily usage in session
         const today = new Date().toISOString().split("T")[0];
         if (sess.guestLastReset !== today) {
           sess.guestPromptsToday = 0;
@@ -271,7 +287,6 @@ export async function registerRoutes(
         if ((sess.guestPromptsToday || 0) >= GUEST_DAILY_LIMIT) {
           return res.status(429).json({ limitReached: true, reason: "daily", plan: "guest" });
         }
-        sess.guestPromptsToday = (sess.guestPromptsToday || 0) + 1;
       }
 
       const detectedTool = detectTool(input);
@@ -295,10 +310,24 @@ export async function registerRoutes(
         messages: [{ role: "user", content: input }],
       });
 
+      let fullText = "";
       for await (const event of stream) {
         if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
           const text = event.delta.text;
-          if (text) res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+          if (text) {
+            fullText += text;
+            res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+          }
+        }
+      }
+
+      // Only count usage if the response is a real prompt, not a clarification question
+      const isClarification = fullText.trimStart().startsWith("CLARIFY:");
+      if (!isClarification) {
+        if (req.isAuthenticated()) {
+          await storage.incrementPromptUsage((req.user as any).id);
+        } else {
+          sess.guestPromptsToday = (sess.guestPromptsToday || 0) + 1;
         }
       }
 
