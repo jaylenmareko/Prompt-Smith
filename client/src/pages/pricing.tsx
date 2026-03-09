@@ -39,6 +39,7 @@ export default function PricingPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const handleUpgrade = async (planKey: string) => {
     if (!user) {
@@ -106,15 +107,20 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PLANS.map((plan) => {
             const isCurrentPlan = user?.plan === plan.key;
+            const isSelected = selected === plan.key;
             return (
               <div
                 key={plan.key}
-                className="relative rounded-2xl p-6"
+                onClick={() => setSelected(plan.key)}
+                className="relative rounded-2xl p-6 cursor-pointer"
                 style={{
                   backgroundColor: "hsl(var(--card))",
-                  border: plan.popular
+                  border: isSelected || isCurrentPlan
+                    ? "2px solid hsl(var(--foreground))"
+                    : plan.popular
                     ? "2px solid hsl(var(--foreground))"
                     : "1px solid hsl(var(--border))",
+                  opacity: isSelected || isCurrentPlan || plan.popular ? 1 : 0.85,
                 }}
               >
                 {plan.popular && (
@@ -163,7 +169,7 @@ export default function PricingPage() {
 
                 <button
                   disabled={isCurrentPlan || loading === plan.key}
-                  onClick={() => plan.key !== "free" && handleUpgrade(plan.key)}
+                  onClick={(e) => { e.stopPropagation(); plan.key !== "free" && handleUpgrade(plan.key); }}
                   className="w-full h-10 rounded-xl text-sm font-medium transition-opacity disabled:opacity-40"
                   style={
                     plan.popular
