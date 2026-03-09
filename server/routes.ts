@@ -84,9 +84,8 @@ function getSystemPrompt(targetTool: string): string {
 - Ask about purpose and features, not about frameworks or databases. Users may not be technical.
 - If the core purpose is unclear, ask one question about it before generating.`,
 
-    "Cursor": `- If the user is clearly technical (mentions a language, framework, or codebase), ask about tech stack if missing.
-- If they seem non-technical, ask about what the feature/app should do instead, then choose an appropriate stack yourself.
-- Never generate a prompt with assumed tech choices that could conflict with an existing project.`,
+    "Cursor": `- Users are developers. If the language or framework is not mentioned, ask about it directly — they will know.
+- Never assume the tech stack. A wrong assumption could conflict with an existing codebase.`,
 
     "Midjourney": `- If the subject or scene is clear, generate directly — you can assume a style.
 - If the mood, tone, or intended use is completely unclear and would drastically change the output, ask one focused question about it (e.g. "Should this feel dark and cinematic or bright and playful?").`,
