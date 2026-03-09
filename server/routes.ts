@@ -314,7 +314,12 @@ export async function registerRoutes(
         }
       }
 
-      const detectedTool = detectTool(input);
+      // Scan full conversation for tool mentions (user may mention tool mid-conversation)
+      const allUserText = [
+        ...history.filter((m: any) => m.role === "user").map((m: any) => m.content),
+        input,
+      ].join(" ");
+      const detectedTool = detectTool(allUserText);
       const finalTool = detectedTool || selectedTool || "ChatGPT";
 
       const anthropic = new Anthropic({
