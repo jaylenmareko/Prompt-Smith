@@ -691,8 +691,8 @@ export default function DashboardPage() {
                   <div className="relative flex items-center justify-center">
                     {isListening && (
                       <>
-                        <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#007AFF", opacity: 0.2 }} />
-                        <span className="absolute rounded-full animate-ping" style={{ width: "84px", height: "84px", backgroundColor: "#007AFF", opacity: 0.1, animationDelay: "0.4s" }} />
+                        <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#FF9500", opacity: 0.2 }} />
+                        <span className="absolute rounded-full animate-ping" style={{ width: "84px", height: "84px", backgroundColor: "#FF9500", opacity: 0.1, animationDelay: "0.4s" }} />
                       </>
                     )}
                     <button
@@ -700,34 +700,35 @@ export default function DashboardPage() {
                       data-testid="button-mic-center"
                       className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
                       style={{
-                        backgroundColor: "#007AFF",
-                        boxShadow: isListening ? "0 0 0 4px rgba(0,122,255,0.3), 0 4px 16px rgba(0,122,255,0.4)" : "0 2px 8px rgba(0,122,255,0.3)",
+                        backgroundColor: "hsl(var(--muted))",
+                        border: "1px solid hsl(var(--border))",
+                        boxShadow: isListening ? "0 0 0 4px rgba(255,149,0,0.25)" : "none",
                       }}
                     >
                       {isListening ? (
                         <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
-                          <rect x="0" y="6" width="3" height="8" rx="1.5" fill="white"/>
-                          <rect x="5" y="2" width="3" height="16" rx="1.5" fill="white"/>
-                          <rect x="10" y="0" width="3" height="20" rx="1.5" fill="white"/>
-                          <rect x="15" y="2" width="3" height="16" rx="1.5" fill="white"/>
-                          <rect x="20" y="5" width="3" height="10" rx="1.5" fill="white"/>
-                          <rect x="25" y="7" width="3" height="6" rx="1.5" fill="white"/>
+                          <rect x="0" y="6" width="3" height="8" rx="1.5" fill="#FF9500"/>
+                          <rect x="5" y="2" width="3" height="16" rx="1.5" fill="#FF9500"/>
+                          <rect x="10" y="0" width="3" height="20" rx="1.5" fill="#FF9500"/>
+                          <rect x="15" y="2" width="3" height="16" rx="1.5" fill="#FF9500"/>
+                          <rect x="20" y="5" width="3" height="10" rx="1.5" fill="#FF9500"/>
+                          <rect x="25" y="7" width="3" height="6" rx="1.5" fill="#FF9500"/>
                         </svg>
                       ) : (
                         <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
-                          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="white"/>
-                          <rect x="5" y="5" width="3" height="10" rx="1.5" fill="white"/>
-                          <rect x="10" y="2" width="3" height="16" rx="1.5" fill="white"/>
-                          <rect x="15" y="5" width="3" height="10" rx="1.5" fill="white"/>
-                          <rect x="20" y="7" width="3" height="6" rx="1.5" fill="white"/>
-                          <rect x="25" y="8" width="3" height="4" rx="1.5" fill="white"/>
+                          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="#FF9500"/>
+                          <rect x="5" y="5" width="3" height="10" rx="1.5" fill="#FF9500"/>
+                          <rect x="10" y="2" width="3" height="16" rx="1.5" fill="#FF9500"/>
+                          <rect x="15" y="5" width="3" height="10" rx="1.5" fill="#FF9500"/>
+                          <rect x="20" y="7" width="3" height="6" rx="1.5" fill="#FF9500"/>
+                          <rect x="25" y="8" width="3" height="4" rx="1.5" fill="#FF9500"/>
                         </svg>
                       )}
                     </button>
                     <button
                       onClick={toggleVoice}
                       className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
-                      style={{ left: "calc(50% + 40px)", color: isListening ? "#007AFF" : "#c4c0bb", whiteSpace: "nowrap" }}
+                      style={{ left: "calc(50% + 40px)", color: isListening ? "#FF9500" : "#c4c0bb", whiteSpace: "nowrap" }}
                     >
                       {isListening ? t.listening : t.clickToSpeak}
                     </button>
