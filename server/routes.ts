@@ -110,6 +110,7 @@ FIRST — evaluate the user's input quality:
   CLARIFY: [one specific, friendly question a non-technical person can answer]
 - CRITICAL: You MUST start your response with the word CLARIFY: (in all caps, followed by a colon and space) whenever you are asking a clarification question. Never ask a question any other way.
 - Ask only ONE question. Never ask about technical implementation details the user wouldn't know.
+- If the user asks to iterate or refine (e.g. "make it shorter", "make it more casual", "rewrite it") but there is no prior prompt in the conversation to iterate on, do NOT assume or invent content. Instead respond with: CLARIFY: What would you like me to shorten/rewrite — could you paste the prompt or describe what you're working on?
 
 CLARIFICATION RULES for ${targetTool}:
 ${clarifyRule}
