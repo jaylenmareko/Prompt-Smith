@@ -705,24 +705,22 @@ export default function DashboardPage() {
                       }}
                     >
                       {isListening ? (
-                        // Waveform active — taller bars
-                        <svg width="24" height="22" viewBox="0 0 24 22" fill="none">
-                          <rect x="0"  y="9"  width="2.5" height="4"  rx="1.25" fill="white"/>
-                          <rect x="4"  y="5"  width="2.5" height="12" rx="1.25" fill="white"/>
-                          <rect x="8"  y="1"  width="2.5" height="20" rx="1.25" fill="white"/>
-                          <rect x="12" y="3"  width="2.5" height="16" rx="1.25" fill="white"/>
-                          <rect x="16" y="1"  width="2.5" height="20" rx="1.25" fill="white"/>
-                          <rect x="20" y="5"  width="2.5" height="12" rx="1.25" fill="white"/>
+                        <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                          <rect x="0" y="6" width="3" height="8" rx="1.5" fill="white"/>
+                          <rect x="5" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="10" y="0" width="3" height="20" rx="1.5" fill="white"/>
+                          <rect x="15" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="20" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="25" y="7" width="3" height="6" rx="1.5" fill="white"/>
                         </svg>
                       ) : (
-                        // Waveform idle — symmetric bell curve
-                        <svg width="24" height="22" viewBox="0 0 24 22" fill="none">
-                          <rect x="0"  y="9"  width="2.5" height="4"  rx="1.25" fill="white"/>
-                          <rect x="4"  y="6"  width="2.5" height="10" rx="1.25" fill="white"/>
-                          <rect x="8"  y="2"  width="2.5" height="18" rx="1.25" fill="white"/>
-                          <rect x="12" y="2"  width="2.5" height="18" rx="1.25" fill="white"/>
-                          <rect x="16" y="6"  width="2.5" height="10" rx="1.25" fill="white"/>
-                          <rect x="20" y="9"  width="2.5" height="4"  rx="1.25" fill="white"/>
+                        <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="white"/>
+                          <rect x="5" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="10" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="15" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="20" y="7" width="3" height="6" rx="1.5" fill="white"/>
+                          <rect x="25" y="8" width="3" height="4" rx="1.5" fill="white"/>
                         </svg>
                       )}
                     </button>
