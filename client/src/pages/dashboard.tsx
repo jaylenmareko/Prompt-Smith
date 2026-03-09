@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Copy, Bookmark, Loader2, Sparkles, User, X, PanelLeft } from "lucide-react";
+import { Copy, Bookmark, Loader2, Sparkles, User, PanelLeft } from "lucide-react";
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
@@ -69,9 +69,7 @@ export default function DashboardPage() {
     setLoginModalOpen(true);
   };
   const SIDEBAR_WIDTH = 260;
-  const [showNudge, setShowNudge] = useState(false);
-
-  const [inputValue, setInputValue] = useState("");
+const [inputValue, setInputValue] = useState("");
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [messages, setMessages] = useState<LocalMessage[]>([]);
   const [currentConvId, setCurrentConvId] = useState<string | null>(null);
@@ -146,11 +144,11 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchGuestUsage(); }, [fetchGuestUsage]);
 
-  // Show login nudge after 3 seconds if not logged in
+  // Show login modal almost instantly for guests
   useEffect(() => {
     if (authLoading) return;
     if (user) return;
-    const t = setTimeout(() => setShowNudge(true), 3000);
+    const t = setTimeout(() => openLogin("login"), 400);
     return () => clearTimeout(t);
   }, [authLoading, user]);
 
@@ -934,49 +932,6 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Login nudge — centered modal, appears after 3 seconds for guests */}
-      {showNudge && !user && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
-          <div
-            className="relative w-full max-w-sm rounded-2xl p-8 shadow-xl"
-            style={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}
-          >
-            <button
-              onClick={() => setShowNudge(false)}
-              className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-muted"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-semibold mb-2" style={{ color: "hsl(var(--foreground))" }}>
-                Get started
-              </h2>
-              <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
-                Save your prompts and unlock more features
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => { setShowNudge(false); openLogin("login"); }}
-                className="w-full h-11 rounded-xl text-sm font-medium border transition-opacity hover:opacity-80"
-                style={{ color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))", backgroundColor: "transparent" }}
-              >
-                Log in
-              </button>
-              <button
-                onClick={() => { setShowNudge(false); openLogin("signup"); }}
-                className="w-full h-11 rounded-xl text-sm font-medium border transition-opacity hover:opacity-80"
-                style={{ color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))", backgroundColor: "transparent" }}
-              >
-                Create account
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </SidebarProvider>
   );
 }
