@@ -823,7 +823,7 @@ const [inputValue, setInputValue] = useState("");
                             </div>
                           ) : (
                             <button
-                              onClick={() => setSidebarOpen(true)}
+                              onClick={() => setLocation("/pricing")}
                               className="text-xs px-4 py-2 rounded-lg font-medium"
                               style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
                             >
