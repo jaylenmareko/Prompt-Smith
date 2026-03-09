@@ -499,26 +499,41 @@ export default function DashboardPage() {
   );
 
   const usageWarning = () => {
-    let text: string | null = null;
-    if (!user && guestUsage && guestUsage.used >= 3) {
-      const remaining = Math.max(0, guestUsage.limit - guestUsage.used);
-      text = remaining === 0 ? "No prompts left today" : `${remaining} prompt${remaining === 1 ? "" : "s"} left today`;
+    let used = 0;
+    let limit = 0;
+    let period = "today";
+
+    if (!user && guestUsage) {
+      used = guestUsage.used;
+      limit = guestUsage.limit;
     } else if (user) {
       const today = new Date().toISOString().split("T")[0];
       const thisMonth = new Date().toISOString().substring(0, 7);
-      const dailyUsed = user.lastResetDate === today ? user.promptsUsedToday : 0;
-      const monthlyUsed = user.lastMonthlyReset === thisMonth ? user.promptsUsedMonth : 0;
-      if (user.plan === "free" && dailyUsed >= 3) {
-        const remaining = Math.max(0, 5 - dailyUsed);
-        text = remaining === 0 ? "No prompts left today" : `${remaining} prompt${remaining === 1 ? "" : "s"} left today`;
-      } else if (user.plan === "starter" && monthlyUsed >= 450) {
-        const remaining = Math.max(0, 500 - monthlyUsed);
-        text = remaining === 0 ? "No prompts left this month" : `${remaining} prompt${remaining === 1 ? "" : "s"} left this month`;
+      if (user.plan === "free") {
+        used = user.lastResetDate === today ? user.promptsUsedToday : 0;
+        limit = 5;
+      } else if (user.plan === "starter") {
+        used = user.lastMonthlyReset === thisMonth ? user.promptsUsedMonth : 0;
+        limit = 500;
+        period = "this month";
+      } else {
+        return null; // unlimited — show nothing
       }
+    } else {
+      return null;
     }
-    if (!text) return null;
+
+    const remaining = Math.max(0, limit - used);
+    const isLow = remaining <= 2;
+    const text = remaining === 0
+      ? `No prompts left ${period}`
+      : `${used}/${limit} prompts used ${period}`;
+
     return (
-      <p className="text-center text-[11px] mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+      <p
+        className="text-center text-[11px] mb-1"
+        style={{ color: isLow ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))" }}
+      >
         {text}
       </p>
     );
