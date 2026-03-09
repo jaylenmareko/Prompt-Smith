@@ -706,24 +706,22 @@ export default function DashboardPage() {
                       }}
                     >
                       {isListening ? (
-                        <svg width="34" height="24" viewBox="0 0 34 24" fill="none">
-                          <rect x="0.5"  y="8.5" width="2.5" height="7"  rx="1.25" fill="white"/>
-                          <rect x="5.5"  y="5.5" width="2.5" height="13" rx="1.25" fill="white"/>
-                          <rect x="10.5" y="2.5" width="2.5" height="19" rx="1.25" fill="white"/>
-                          <rect x="15.5" y="1"   width="2.5" height="22" rx="1.25" fill="white"/>
-                          <rect x="20.5" y="3"   width="2.5" height="18" rx="1.25" fill="white"/>
-                          <rect x="25.5" y="6"   width="2.5" height="12" rx="1.25" fill="white"/>
-                          <rect x="30.5" y="8"   width="2.5" height="8"  rx="1.25" fill="white"/>
+                        <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
+                          <rect x="0"    y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
+                          <rect x="5.5"  y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
+                          <rect x="11"   y="1"  width="2.5" height="22" rx="1.25" fill="white"/>
+                          <rect x="16.5" y="3"  width="2.5" height="18" rx="1.25" fill="white"/>
+                          <rect x="22"   y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
+                          <rect x="27.5" y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
                         </svg>
                       ) : (
-                        <svg width="34" height="24" viewBox="0 0 34 24" fill="none">
-                          <rect x="0.5"  y="8.5" width="2.5" height="7"  rx="1.25" fill="white"/>
-                          <rect x="5.5"  y="5.5" width="2.5" height="13" rx="1.25" fill="white"/>
-                          <rect x="10.5" y="2.5" width="2.5" height="19" rx="1.25" fill="white"/>
-                          <rect x="15.5" y="1"   width="2.5" height="22" rx="1.25" fill="white"/>
-                          <rect x="20.5" y="3"   width="2.5" height="18" rx="1.25" fill="white"/>
-                          <rect x="25.5" y="6"   width="2.5" height="12" rx="1.25" fill="white"/>
-                          <rect x="30.5" y="8"   width="2.5" height="8"  rx="1.25" fill="white"/>
+                        <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
+                          <rect x="0"    y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
+                          <rect x="5.5"  y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
+                          <rect x="11"   y="1"  width="2.5" height="22" rx="1.25" fill="white"/>
+                          <rect x="16.5" y="3"  width="2.5" height="18" rx="1.25" fill="white"/>
+                          <rect x="22"   y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
+                          <rect x="27.5" y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
                         </svg>
                       )}
                     </button>
