@@ -274,7 +274,7 @@ export async function registerRoutes(
 
   app.post("/api/generate", async (req, res) => {
     try {
-      const { input, targetTool: selectedTool } = req.body;
+      const { input, targetTool: selectedTool, history = [] } = req.body;
       if (!input) return res.status(400).json({ message: "Input is required" });
       if (typeof input !== "string" || input.length > 2000) return res.status(400).json({ message: "Input must be 2000 characters or less" });
 
@@ -328,11 +328,18 @@ export async function registerRoutes(
 
       res.write(`data: ${JSON.stringify({ detectedTool: finalTool })}\n\n`);
 
+      const conversationMessages = [
+        ...history
+          .filter((m: any) => m.role === "user" || m.role === "assistant")
+          .map((m: any) => ({ role: m.role as "user" | "assistant", content: m.content })),
+        { role: "user" as const, content: input },
+      ];
+
       const stream = anthropic.messages.stream({
         model: "claude-sonnet-4-6",
         max_tokens: 4096,
         system: getSystemPrompt(finalTool),
-        messages: [{ role: "user", content: input }],
+        messages: conversationMessages,
       });
 
       let fullText = "";

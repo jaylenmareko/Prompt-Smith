@@ -245,7 +245,13 @@ const [inputValue, setInputValue] = useState("");
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: userInput, targetTool: selectedTool }),
+        body: JSON.stringify({
+          input: userInput,
+          targetTool: selectedTool,
+          history: priorMessages
+            .filter(m => m.role === "user" || m.role === "assistant")
+            .map(m => ({ role: m.role, content: m.content })),
+        }),
       });
 
       if (res.status === 429) {
