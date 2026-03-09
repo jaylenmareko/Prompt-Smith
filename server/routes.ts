@@ -106,8 +106,9 @@ function getSystemPrompt(targetTool: string): string {
   return `You are Prompt Smith, an expert AI prompt engineer. Your job is to take a user's plain-language description and generate an optimized prompt for ${targetTool}.
 
 FIRST — evaluate the user's input quality:
-- If a critical detail is missing that would make the prompt useless or produce the wrong result, do NOT generate. Instead respond with exactly this format and nothing else:
+- If a critical detail is missing that would make the prompt useless or produce the wrong result, do NOT generate. Instead you MUST respond with EXACTLY this format and absolutely nothing else — no greeting, no explanation, just this:
   CLARIFY: [one specific, friendly question a non-technical person can answer]
+- CRITICAL: You MUST start your response with the word CLARIFY: (in all caps, followed by a colon and space) whenever you are asking a clarification question. Never ask a question any other way.
 - Ask only ONE question. Never ask about technical implementation details the user wouldn't know.
 
 CLARIFICATION RULES for ${targetTool}:
@@ -359,7 +360,8 @@ export async function registerRoutes(
       }
 
       // Only count usage if the response is a real prompt, not a clarification question
-      const isClarification = fullText.trimStart().startsWith("CLARIFY:");
+      const trimmed = fullText.trim();
+      const isClarification = trimmed.startsWith("CLARIFY:") || (trimmed.length < 300 && trimmed.endsWith("?"));
       if (!isClarification) {
         if (req.isAuthenticated()) {
           await storage.incrementPromptUsage((req.user as any).id);
