@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mic, ArrowUp, Copy, Bookmark, Loader2, Sparkles, User, X, PanelLeft } from "lucide-react";
+import { ArrowUp, Copy, Bookmark, Loader2, Sparkles, User, X, PanelLeft } from "lucide-react";
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
@@ -487,7 +487,7 @@ export default function DashboardPage() {
         disabled={!inputValue.trim() || isGenerating}
         data-testid={`button-send${testIdSuffix}`}
         className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all disabled:opacity-30"
-        style={{ backgroundColor: inputValue.trim() ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", color: "hsl(var(--background))" }}
+        style={{ backgroundColor: inputValue.trim() ? "#007AFF" : "hsl(var(--muted-foreground))", color: "#ffffff" }}
       >
         {isGenerating && testIdSuffix === "-chat" ? (
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -689,8 +689,8 @@ export default function DashboardPage() {
                   <div className="relative flex items-center justify-center">
                     {isListening && (
                       <>
-                        <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#1DB954", opacity: 0.25 }} />
-                        <span className="absolute rounded-full animate-ping" style={{ width: "84px", height: "84px", backgroundColor: "#1DB954", opacity: 0.12, animationDelay: "0.4s" }} />
+                        <span className="absolute rounded-full animate-ping" style={{ width: "70px", height: "70px", backgroundColor: "#007AFF", opacity: 0.2 }} />
+                        <span className="absolute rounded-full animate-ping" style={{ width: "84px", height: "84px", backgroundColor: "#007AFF", opacity: 0.1, animationDelay: "0.4s" }} />
                       </>
                     )}
                     <button
@@ -698,17 +698,36 @@ export default function DashboardPage() {
                       data-testid="button-mic-center"
                       className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none"
                       style={{
-                        backgroundColor: "#ffffff",
-                        border: "2px solid #e5e5e5",
-                        boxShadow: isListening ? "0 0 0 4px rgba(29,185,84,0.3), 0 4px 16px rgba(29,185,84,0.4)" : "0 2px 8px rgba(0,0,0,0.12)",
+                        backgroundColor: "#007AFF",
+                        boxShadow: isListening ? "0 0 0 4px rgba(0,122,255,0.3), 0 4px 16px rgba(0,122,255,0.4)" : "0 2px 8px rgba(0,122,255,0.3)",
                       }}
                     >
-                      <Mic className="w-6 h-6" style={{ color: "#1DB954" }} />
+                      {isListening ? (
+                        // Waveform while listening
+                        <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                          <rect x="0" y="6" width="3" height="8" rx="1.5" fill="white"/>
+                          <rect x="5" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="10" y="0" width="3" height="20" rx="1.5" fill="white"/>
+                          <rect x="15" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="20" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="25" y="7" width="3" height="6" rx="1.5" fill="white"/>
+                        </svg>
+                      ) : (
+                        // Waveform idle
+                        <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="white"/>
+                          <rect x="5" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="10" y="2" width="3" height="16" rx="1.5" fill="white"/>
+                          <rect x="15" y="5" width="3" height="10" rx="1.5" fill="white"/>
+                          <rect x="20" y="7" width="3" height="6" rx="1.5" fill="white"/>
+                          <rect x="25" y="8" width="3" height="4" rx="1.5" fill="white"/>
+                        </svg>
+                      )}
                     </button>
                     <button
                       onClick={toggleVoice}
                       className={`absolute text-xs transition-colors ${!isListening ? "animate-flicker" : ""}`}
-                      style={{ left: "calc(50% + 40px)", color: isListening ? "#1DB954" : "#c4c0bb", whiteSpace: "nowrap" }}
+                      style={{ left: "calc(50% + 40px)", color: isListening ? "#007AFF" : "#c4c0bb", whiteSpace: "nowrap" }}
                     >
                       {isListening ? t.listening : t.clickToSpeak}
                     </button>
