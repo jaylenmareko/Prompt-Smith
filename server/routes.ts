@@ -79,16 +79,39 @@ function getSystemPrompt(targetTool: string): string {
 
   const specific = toolInstructions[targetTool] || toolInstructions["ChatGPT"];
 
-  const isTechTool = ["Cursor", "Replit"].includes(targetTool);
+  const clarifyRules: Record<string, string> = {
+    "Replit": `- NEVER assume the tech stack. Instead ask about what the app needs to DO — who uses it, what the main actions are, whether it needs accounts or payments. Then YOU choose a sensible modern stack based on those answers and include it in the prompt.
+- Ask about purpose and features, not about frameworks or databases. Users may not be technical.
+- If the core purpose is unclear, ask one question about it before generating.`,
+
+    "Cursor": `- If the user is clearly technical (mentions a language, framework, or codebase), ask about tech stack if missing.
+- If they seem non-technical, ask about what the feature/app should do instead, then choose an appropriate stack yourself.
+- Never generate a prompt with assumed tech choices that could conflict with an existing project.`,
+
+    "Midjourney": `- If the subject or scene is clear, generate directly — you can assume a style.
+- If the mood, tone, or intended use is completely unclear and would drastically change the output, ask one focused question about it (e.g. "Should this feel dark and cinematic or bright and playful?").`,
+
+    "DALL·E": `- If the subject is clear, generate directly.
+- Only ask a clarification if the mood or style is so ambiguous that any assumption would likely miss the mark entirely.`,
+
+    "Sora": `- Always clarify the mood and camera style if not mentioned — these are critical for video and cannot be assumed without risking a completely wrong result.
+- Ask one question covering the most important missing visual detail (mood, pacing, or camera movement).`,
+
+    "default": `- Only ask for clarification if a truly critical detail is missing and no reasonable assumption can be made.
+- For most requests (writing, Q&A, analysis), make sensible assumptions and generate directly.`,
+  };
+
+  const clarifyRule = clarifyRules[targetTool] || clarifyRules["default"];
 
   return `You are Prompt Smith, an expert AI prompt engineer. Your job is to take a user's plain-language description and generate an optimized prompt for ${targetTool}.
 
 FIRST — evaluate the user's input quality:
-- If the input is too vague, contradictory, or missing a critical detail that would make or break the prompt, do NOT generate a weak prompt. Instead respond with exactly this format and nothing else:
-  CLARIFY: [one specific, friendly question about the single most important missing detail]
-- Ask only ONE question. Do not list multiple questions.
-${isTechTool ? `- For technical/app requests: ALWAYS clarify the tech stack (language, framework, database) if not specified. Do not assume. Wrong assumptions waste the user's time.
-- Also clarify scope if unclear — a vague app idea needs more detail before generating.` : `- Only ask for clarification if a critical detail is truly missing. Make reasonable assumptions for minor details.`}
+- If a critical detail is missing that would make the prompt useless or produce the wrong result, do NOT generate. Instead respond with exactly this format and nothing else:
+  CLARIFY: [one specific, friendly question a non-technical person can answer]
+- Ask only ONE question. Never ask about technical implementation details the user wouldn't know.
+
+CLARIFICATION RULES for ${targetTool}:
+${clarifyRule}
 
 WHEN GENERATING A PROMPT — CRITICAL RULES:
 - Return ONLY the prompt text — nothing else
