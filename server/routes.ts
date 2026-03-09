@@ -347,6 +347,27 @@ export async function registerRoutes(
     }
   });
 
+  // ── Stripe: sync subscription → update plan ──────────────────────
+  app.post("/api/stripe/sync", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    const user = req.user as any;
+    try {
+      if (!user.stripeCustomerId) return res.json({ plan: "free" });
+      const subscriptions = await stripe.subscriptions.list({ customer: user.stripeCustomerId, status: "active", limit: 1 });
+      const sub = subscriptions.data[0];
+      if (!sub) {
+        await storage.updateProfile(user.id, { plan: "free" });
+        return res.json({ plan: "free" });
+      }
+      const priceId = sub.items.data[0]?.price.id;
+      const plan = PLAN_FROM_PRICE[priceId] || "free";
+      await storage.updateProfile(user.id, { plan, stripeSubscriptionId: sub.id });
+      res.json({ plan });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ── Stripe: customer portal ───────────────────────────────────────
   app.post("/api/stripe/create-portal-session", async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });

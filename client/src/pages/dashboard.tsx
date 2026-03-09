@@ -97,13 +97,15 @@ export default function DashboardPage() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // Handle Stripe checkout success redirect
+  // Handle Stripe checkout success redirect + sync plan
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("checkout") === "success") {
-      toast({ title: "You're all set!", description: "Your plan has been upgraded." });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       window.history.replaceState({}, "", "/");
+      fetch("/api/stripe/sync", { method: "POST" }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        toast({ title: "You're all set!", description: "Your plan has been upgraded." });
+      });
     }
   }, []);
 
