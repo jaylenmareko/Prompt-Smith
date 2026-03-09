@@ -382,7 +382,7 @@ export function AppSidebar({
               <input
                 type="text"
                 value={searchPrompts}
-                onChange={e => setSearchPrompts(e.target.value)}
+                onChange={e => { setSearchPrompts(e.target.value); if (e.target.value) setSavedOpen(true); }}
                 placeholder={t.searchSavedPrompts}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-stone-400"
                 style={{ color: FG }}
