@@ -934,40 +934,46 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Login nudge — appears after 3 seconds for guests */}
+      {/* Login nudge — centered modal, appears after 3 seconds for guests */}
       {showNudge && !user && (
-        <div
-          className="fixed bottom-6 right-6 z-50 rounded-2xl p-4 max-w-xs shadow-lg"
-          style={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--popover-border))" }}
-        >
-          <button
-            onClick={() => setShowNudge(false)}
-            className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full transition-colors hover:bg-muted"
-            style={{ color: "hsl(var(--muted-foreground))" }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>
+          <div
+            className="relative w-full max-w-sm rounded-2xl p-8 shadow-xl"
+            style={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}
           >
-            <X className="w-3 h-3" />
-          </button>
-          <p className="text-sm font-semibold mb-1 pr-4" style={{ color: "hsl(var(--foreground))" }}>
-            {t.savePrompts}
-          </p>
-          <p className="text-xs mb-3" style={{ color: "hsl(var(--muted-foreground))" }}>
-            {t.createFreeAccount}
-          </p>
-          <div className="flex gap-2">
             <button
-              onClick={() => { setShowNudge(false); openLogin("login"); }}
-              className="flex-1 text-xs py-1.5 rounded-lg font-medium border transition-colors"
-              style={{ color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--border))" }}
+              onClick={() => setShowNudge(false)}
+              className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-muted"
+              style={{ color: "hsl(var(--muted-foreground))" }}
             >
-              {t.logIn}
+              <X className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => { setShowNudge(false); openLogin("signup"); }}
-              className="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
-            >
-              {t.signUpFree}
-            </button>
+
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-semibold mb-2" style={{ color: "hsl(var(--foreground))" }}>
+                Get started
+              </h2>
+              <p className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Save your prompts and unlock more features
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => { setShowNudge(false); openLogin("login"); }}
+                className="w-full h-11 rounded-xl text-sm font-medium border transition-opacity hover:opacity-80"
+                style={{ color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))", backgroundColor: "transparent" }}
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => { setShowNudge(false); openLogin("signup"); }}
+                className="w-full h-11 rounded-xl text-sm font-medium border transition-opacity hover:opacity-80"
+                style={{ color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))", backgroundColor: "transparent" }}
+              >
+                Create account
+              </button>
+            </div>
           </div>
         </div>
       )}
