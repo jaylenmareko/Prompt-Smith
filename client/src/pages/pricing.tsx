@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import { Check, ArrowLeft, Zap } from "lucide-react";
 
 const PLANS = [
@@ -36,10 +37,14 @@ const PLANS = [
 export default function PricingPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleUpgrade = async (planKey: string) => {
-    if (!user) { setLocation("/"); return; }
+    if (!user) {
+      toast({ title: "Sign in required", description: "Please sign in to upgrade.", variant: "destructive" });
+      return;
+    }
     setLoading(planKey);
     try {
       const res = await fetch("/api/stripe/create-checkout-session", {
@@ -48,8 +53,13 @@ export default function PricingPage() {
         body: JSON.stringify({ plan: planKey }),
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.message || "No checkout URL returned");
+      }
+    } catch (err: any) {
+      toast({ title: "Checkout failed", description: err.message || "Please try again.", variant: "destructive" });
       setLoading(null);
     }
   };
@@ -59,8 +69,13 @@ export default function PricingPage() {
     try {
       const res = await fetch("/api/stripe/create-portal-session", { method: "POST" });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.message || "No portal URL returned");
+      }
+    } catch (err: any) {
+      toast({ title: "Portal failed", description: err.message || "Please try again.", variant: "destructive" });
       setLoading(null);
     }
   };
