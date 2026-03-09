@@ -324,11 +324,11 @@ export function AppSidebar({
         <div className="px-3 pt-4 pb-1 flex-shrink-0 flex items-center justify-between">
           <button
             onClick={onNewChat}
-            className="text-sm font-semibold tracking-wide px-1 hover:opacity-70 transition-opacity"
-            style={{ color: FG }}
+            className="flex items-center gap-2 px-1 hover:opacity-70 transition-opacity"
             data-testid="text-sidebar-logo"
           >
-            Prompt Smith
+            <img src="/favicon.svg" alt="Prompt Smith" className="w-5 h-5 shrink-0" />
+            <span className="text-sm font-semibold tracking-wide" style={{ color: FG }}>Prompt Smith</span>
           </button>
           <button
             onClick={onClose}
