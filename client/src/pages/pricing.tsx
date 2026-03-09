@@ -109,12 +109,14 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.key}
+                onClick={() => plan.key !== "free" && !isCurrentPlan && handleUpgrade(plan.key)}
                 className="relative rounded-2xl p-6"
                 style={{
                   backgroundColor: "hsl(var(--card))",
                   border: plan.popular
                     ? "2px solid hsl(var(--foreground))"
                     : "1px solid hsl(var(--border))",
+                  cursor: plan.key !== "free" && !isCurrentPlan ? "pointer" : "default",
                 }}
               >
                 {plan.popular && (

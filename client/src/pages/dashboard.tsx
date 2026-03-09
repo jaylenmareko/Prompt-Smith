@@ -32,22 +32,25 @@ const LANG_CODES: Record<string, string> = {
   "한국어":    "ko-KR",
 };
 
-const STORAGE_KEYS = {
-  conversations: "ps_conversations",
-  savedPrompts: "ps_saved_prompts",
-};
+function getStorageKeys(userId?: number) {
+  const ns = userId ? `user_${userId}` : "guest";
+  return {
+    conversations: `ps_conversations_${ns}`,
+    savedPrompts: `ps_saved_prompts_${ns}`,
+  };
+}
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-function getStoredConversations(): LocalConversation[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.conversations) || "[]"); }
+function getStoredConversations(userId?: number): LocalConversation[] {
+  try { return JSON.parse(localStorage.getItem(getStorageKeys(userId).conversations) || "[]"); }
   catch { return []; }
 }
 
-function getStoredSavedPrompts(): LocalSavedPrompt[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.savedPrompts) || "[]"); }
+function getStoredSavedPrompts(userId?: number): LocalSavedPrompt[] {
+  try { return JSON.parse(localStorage.getItem(getStorageKeys(userId).savedPrompts) || "[]"); }
   catch { return []; }
 }
 
@@ -78,8 +81,8 @@ export default function DashboardPage() {
   const [isListening, setIsListening] = useState(false);
   const committedRef = useRef("");
   const shouldListenRef = useRef(false);
-  const [conversations, setConversations] = useState<LocalConversation[]>(getStoredConversations);
-  const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(getStoredSavedPrompts);
+  const [conversations, setConversations] = useState<LocalConversation[]>(() => getStoredConversations(user?.id));
+  const [savedPrompts, setSavedPrompts] = useState<LocalSavedPrompt[]>(() => getStoredSavedPrompts(user?.id));
   const [guestUsage, setGuestUsage] = useState<{ used: number; limit: number } | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
@@ -96,6 +99,14 @@ export default function DashboardPage() {
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
+
+  // Reload conversations/prompts when user changes (login/logout/switch)
+  useEffect(() => {
+    if (authLoading) return;
+    setConversations(getStoredConversations(user?.id));
+    setSavedPrompts(getStoredSavedPrompts(user?.id));
+    startNewChat();
+  }, [user?.id]);
 
   // Handle Stripe checkout success redirect + sync plan
   useEffect(() => {
@@ -159,13 +170,13 @@ export default function DashboardPage() {
       const updated = existing >= 0
         ? prev.map(c => c.id === convId ? conv : c)
         : [conv, ...prev].slice(0, 50);
-      localStorage.setItem(STORAGE_KEYS.conversations, JSON.stringify(updated));
+      localStorage.setItem(getStorageKeys(user?.id).conversations, JSON.stringify(updated));
       return updated;
     });
   };
 
   const loadConversation = useCallback((id: string) => {
-    const conv = getStoredConversations().find(c => c.id === id);
+    const conv = getStoredConversations(user?.id).find(c => c.id === id);
     if (conv) {
       setMessages(conv.messages);
       setCurrentConvId(conv.id);
@@ -194,7 +205,7 @@ export default function DashboardPage() {
   const deleteConversation = useCallback((id: string) => {
     setConversations(prev => {
       const updated = prev.filter(c => c.id !== id);
-      localStorage.setItem(STORAGE_KEYS.conversations, JSON.stringify(updated));
+      localStorage.setItem(getStorageKeys(user?.id).conversations, JSON.stringify(updated));
       return updated;
     });
     if (currentConvId === id) startNewChat();
@@ -203,7 +214,7 @@ export default function DashboardPage() {
   const deleteSavedPrompt = useCallback((id: string) => {
     setSavedPrompts(prev => {
       const updated = prev.filter(p => p.id !== id);
-      localStorage.setItem(STORAGE_KEYS.savedPrompts, JSON.stringify(updated));
+      localStorage.setItem(getStorageKeys(user?.id).savedPrompts, JSON.stringify(updated));
       return updated;
     });
   }, []);
@@ -373,7 +384,7 @@ export default function DashboardPage() {
     };
     setSavedPrompts(prev => {
       const updated = [prompt, ...prev];
-      localStorage.setItem(STORAGE_KEYS.savedPrompts, JSON.stringify(updated));
+      localStorage.setItem(getStorageKeys(user?.id).savedPrompts, JSON.stringify(updated));
       return updated;
     });
     toast({ title: "Prompt saved" });
