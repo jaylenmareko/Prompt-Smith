@@ -16,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Mic, Send, Copy, Bookmark, Loader2, Sparkles, User, X, PanelLeft } from "lucide-react";
+import { Mic, ArrowUp, Copy, Bookmark, Loader2, Sparkles, User, X, PanelLeft } from "lucide-react";
 import type { LocalMessage, LocalConversation, LocalSavedPrompt } from "@/lib/types";
 
 const TOOL_PILLS = ["ChatGPT", "Midjourney", "Cursor", "Replit", "Claude", "DALL·E", "Sora", "Gemini"];
@@ -492,7 +492,7 @@ export default function DashboardPage() {
         {isGenerating && testIdSuffix === "-chat" ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          <Send className="w-4 h-4" />
+          <ArrowUp className="w-4 h-4" />
         )}
       </button>
     </div>
