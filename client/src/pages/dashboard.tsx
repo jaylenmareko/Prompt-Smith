@@ -700,7 +700,7 @@ export default function DashboardPage() {
                       data-testid="button-mic-center"
                       className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 select-none shadow-sm"
                       style={{
-                        background: "linear-gradient(180deg, #FF8243 0%, #FF3333 100%)",
+                        background: "linear-gradient(135deg, #FFA055 0%, #FF5530 55%, #FF3322 100%)",
                         boxShadow: isListening ? "0 0 0 4px rgba(255,149,0,0.3)" : "none",
                         border: "none",
                       }}
@@ -709,8 +709,8 @@ export default function DashboardPage() {
                         <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
                           <rect x="0"    y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
                           <rect x="5.5"  y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
-                          <rect x="11"   y="1"  width="2.5" height="22" rx="1.25" fill="white"/>
-                          <rect x="16.5" y="3"  width="2.5" height="18" rx="1.25" fill="white"/>
+                          <rect x="11"   y="0"  width="2.5" height="24" rx="1.25" fill="white"/>
+                          <rect x="16.5" y="1"  width="2.5" height="22" rx="1.25" fill="white"/>
                           <rect x="22"   y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
                           <rect x="27.5" y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
                         </svg>
@@ -718,8 +718,8 @@ export default function DashboardPage() {
                         <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
                           <rect x="0"    y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
                           <rect x="5.5"  y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
-                          <rect x="11"   y="1"  width="2.5" height="22" rx="1.25" fill="white"/>
-                          <rect x="16.5" y="3"  width="2.5" height="18" rx="1.25" fill="white"/>
+                          <rect x="11"   y="0"  width="2.5" height="24" rx="1.25" fill="white"/>
+                          <rect x="16.5" y="1"  width="2.5" height="22" rx="1.25" fill="white"/>
                           <rect x="22"   y="6"  width="2.5" height="12" rx="1.25" fill="white"/>
                           <rect x="27.5" y="9"  width="2.5" height="6"  rx="1.25" fill="white"/>
                         </svg>
