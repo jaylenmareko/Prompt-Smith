@@ -700,7 +700,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Input section — bottom of screen */}
-                <div className="mt-auto w-full max-w-2xl mx-auto" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
+                <div className="mt-auto md:mt-0 w-full max-w-2xl mx-auto" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}>
                   {usageWarning()}
                   {inputBox("")}
                   {platformHint()}
