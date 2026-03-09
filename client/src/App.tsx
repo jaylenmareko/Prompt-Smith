@@ -9,6 +9,8 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import DashboardPage from "@/pages/dashboard";
 import PricingPage from "@/pages/pricing";
 import ResetPasswordPage from "@/pages/reset-password";
+import TermsPage from "@/pages/terms";
+import PrivacyPage from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +20,8 @@ function Router() {
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/pricing" component={PricingPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
       <Route component={NotFound} />
     </Switch>
   );

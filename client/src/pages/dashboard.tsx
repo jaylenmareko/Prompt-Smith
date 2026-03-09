@@ -766,14 +766,32 @@ const [inputValue, setInputValue] = useState("");
                   {toolPills("welcome")}
                 </div>
 
-                {/* Powered by Claude — desktop only */}
-                <div className="absolute bottom-4 left-4 hidden sm:flex items-center gap-1.5">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "hsl(var(--muted-foreground))" }} />
-                  </svg>
-                  <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-                    Powered by <span className="font-medium">Claude</span>
-                  </span>
+                {/* Footer — powered by + legal links */}
+                <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-3 px-4">
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "hsl(var(--muted-foreground))" }} />
+                    </svg>
+                    <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      Powered by <span className="font-medium">Claude</span>
+                    </span>
+                  </div>
+                  <span className="hidden sm:block text-[11px]" style={{ color: "hsl(var(--border))" }}>·</span>
+                  <a
+                    href="/terms"
+                    className="text-[11px] transition-opacity hover:opacity-70"
+                    style={{ color: "hsl(var(--muted-foreground))" }}
+                  >
+                    Terms
+                  </a>
+                  <span className="text-[11px]" style={{ color: "hsl(var(--border))" }}>·</span>
+                  <a
+                    href="/privacy"
+                    className="text-[11px] transition-opacity hover:opacity-70"
+                    style={{ color: "hsl(var(--muted-foreground))" }}
+                  >
+                    Privacy
+                  </a>
                 </div>
               </div>
             ) : (
