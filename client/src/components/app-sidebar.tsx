@@ -328,7 +328,7 @@ export function AppSidebar({
             data-testid="text-sidebar-logo"
           >
             <img src="/favicon.svg" alt="Prompt-Smith" className="w-11 h-11 shrink-0" />
-            <span className="text-sm font-semibold tracking-wide" style={{ color: FG }}>Prompt-Smith</span>
+            <span className="text-sm font-semibold tracking-wide" style={{ color: FG }}>Prompt-Smith.com</span>
           </button>
           <button
             onClick={onClose}
