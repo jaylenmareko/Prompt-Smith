@@ -1,21 +1,29 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function NotFound() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
-          </div>
+  const [, navigate] = useLocation();
 
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
-          </p>
-        </CardContent>
-      </Card>
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+      style={{ backgroundColor: "hsl(var(--background))" }}
+    >
+      <p className="text-7xl font-light mb-4" style={{ color: "hsl(var(--foreground))" }}>
+        404
+      </p>
+      <h1 className="text-xl font-medium mb-2" style={{ color: "hsl(var(--foreground))" }}>
+        Page not found
+      </h1>
+      <p className="text-sm mb-8" style={{ color: "hsl(var(--muted-foreground))" }}>
+        This page doesn't exist or was moved.
+      </p>
+      <button
+        onClick={() => navigate("/")}
+        className="text-sm px-5 py-2.5 rounded-xl font-medium transition-opacity hover:opacity-80"
+        style={{ backgroundColor: "hsl(var(--foreground))", color: "hsl(var(--background))" }}
+      >
+        Back to Prompt Smith
+      </button>
     </div>
   );
 }
