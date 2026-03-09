@@ -524,15 +524,16 @@ export default function DashboardPage() {
     }
 
     const remaining = Math.max(0, limit - used);
-    const isLow = remaining <= 2;
+    if (remaining > 2) return null;
+
     const text = remaining === 0
       ? `No prompts left ${period}`
-      : `${used}/${limit} prompts used ${period}`;
+      : `${remaining} prompt${remaining === 1 ? "" : "s"} left ${period}`;
 
     return (
       <p
         className="text-center text-[11px] mb-1"
-        style={{ color: isLow ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))" }}
+        style={{ color: "hsl(var(--destructive))" }}
       >
         {text}
       </p>
