@@ -90,7 +90,7 @@ export default function TermsPage() {
           <section>
             <h2 className="font-semibold text-base mb-2">10. Contact</h2>
             <p style={{ color: "hsl(var(--muted-foreground))" }}>
-              For questions about these terms, contact us at support@promptsmith.app.
+              For questions about these terms, contact us at support@prompt-smith.com.
             </p>
           </section>
         </div>

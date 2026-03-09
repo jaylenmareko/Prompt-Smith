@@ -90,7 +90,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-semibold text-base mb-2">10. Contact</h2>
             <p style={{ color: "hsl(var(--muted-foreground))" }}>
-              For privacy-related questions, contact us at support@promptsmith.app.
+              For privacy-related questions, contact us at support@prompt-smith.com.
             </p>
           </section>
         </div>
