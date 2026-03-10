@@ -29,6 +29,14 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const generateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 15,
+  message: { message: "Too many requests, please slow down." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 async function sendResetEmail(to: string, resetUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -274,9 +282,10 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/generate", async (req, res) => {
+  app.post("/api/generate", generateLimiter, async (req, res) => {
     try {
       const { input, targetTool: selectedTool, history = [] } = req.body;
+      const cappedHistory = Array.isArray(history) ? history.slice(-20) : [];
       if (!input) return res.status(400).json({ message: "Input is required" });
       if (typeof input !== "string" || input.length > 2000) return res.status(400).json({ message: "Input must be 2000 characters or less" });
 
@@ -318,7 +327,7 @@ export async function registerRoutes(
 
       // Scan full conversation for tool mentions (user may mention tool mid-conversation)
       const allUserText = [
-        ...history.filter((m: any) => m.role === "user").map((m: any) => m.content),
+        ...cappedHistory.filter((m: any) => m.role === "user").map((m: any) => m.content),
         input,
       ].join(" ");
       const detectedTool = detectTool(allUserText);
@@ -336,7 +345,7 @@ export async function registerRoutes(
       res.write(`data: ${JSON.stringify({ detectedTool: finalTool })}\n\n`);
 
       const conversationMessages = [
-        ...history
+        ...cappedHistory
           .filter((m: any) => m.role === "user" || m.role === "assistant")
           .map((m: any) => ({ role: m.role as "user" | "assistant", content: m.content })),
         { role: "user" as const, content: input },
