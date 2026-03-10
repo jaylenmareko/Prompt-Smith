@@ -12,13 +12,13 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-02-24.acacia" });
 
 const PRICE_IDS: Record<string, string> = {
-  starter: "price_1T971XPrOq2GucuYK25dGAX8",
-  pro:     "price_1T973APrOq2GucuY2LOLtiJL",
+  starter: process.env.STRIPE_STARTER_PRICE_ID!,
+  pro:     process.env.STRIPE_PRO_PRICE_ID!,
 };
 
 const PLAN_FROM_PRICE: Record<string, string> = {
-  "price_1T971XPrOq2GucuYK25dGAX8": "starter",
-  "price_1T973APrOq2GucuY2LOLtiJL": "pro",
+  [process.env.STRIPE_STARTER_PRICE_ID!]: "starter",
+  [process.env.STRIPE_PRO_PRICE_ID!]:     "pro",
 };
 
 const authLimiter = rateLimit({
