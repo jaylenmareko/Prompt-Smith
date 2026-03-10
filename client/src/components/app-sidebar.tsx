@@ -25,6 +25,7 @@ const THEME_KEY = "ps_theme";
 const PLAN_LABELS: Record<string, string> = {
   free: "Free",
   starter: "Starter",
+  pro: "Pro",
   unlimited: "Unlimited",
 };
 
@@ -53,6 +54,7 @@ function BillingSection({ planLabel, remainingLabel, onNavigatePricing, FG, BG, 
   const { toast } = useToast();
   const [portalLoading, setPortalLoading] = useState(false);
   const isPaid = planLabel === "Starter" || planLabel === "Pro";
+  const isTopPlan = planLabel === "Pro";
 
   const handlePortal = async () => {
     setPortalLoading(true);
@@ -79,7 +81,7 @@ function BillingSection({ planLabel, remainingLabel, onNavigatePricing, FG, BG, 
                 <p className="text-xs mt-0.5" style={{ color: MUTFG }}>{remainingLabel}</p>
               )}
             </div>
-            {!isPaid && (
+            {!isTopPlan && (
               <button
                 onClick={onNavigatePricing}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium"
