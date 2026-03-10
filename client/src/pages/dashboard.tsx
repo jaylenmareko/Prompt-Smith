@@ -772,11 +772,18 @@ const [inputValue, setInputValue] = useState("");
                   {inputBox("")}
                   {platformHint()}
                   {toolPills("welcome")}
+                  {/* Mobile footer — in flow below pills */}
+                  <p className="md:hidden text-[11px] text-center mt-3" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    By messaging Prompt Smith, an AI chatbot, you agree to our{" "}
+                    <a href="/terms" className="underline underline-offset-2 transition-opacity hover:opacity-70">Terms</a>
+                    {" "}and have read our{" "}
+                    <a href="/privacy" className="underline underline-offset-2 transition-opacity hover:opacity-70">Privacy Policy</a>.
+                  </p>
                 </div>
 
-                {/* Footer — powered by (left) + legal notice (center) */}
-                <div className="absolute bottom-4 left-0 right-0 px-4 flex items-center">
-                  <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                {/* Footer — desktop only, absolute */}
+                <div className="hidden md:flex absolute bottom-4 left-0 right-0 px-4 items-center">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "hsl(var(--muted-foreground))" }} />
                     </svg>
@@ -790,7 +797,7 @@ const [inputValue, setInputValue] = useState("");
                     {" "}and have read our{" "}
                     <a href="/privacy" className="underline underline-offset-2 transition-opacity hover:opacity-70">Privacy Policy</a>.
                   </p>
-                  <div className="hidden sm:block shrink-0" style={{ width: "110px" }} />
+                  <div className="shrink-0" style={{ width: "110px" }} />
                 </div>
               </div>
             ) : (
