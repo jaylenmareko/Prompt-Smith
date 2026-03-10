@@ -7,6 +7,7 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+app.set("trust proxy", 1); // Required for secure cookies behind Replit's reverse proxy
 app.use(helmet({ contentSecurityPolicy: false })); // CSP off — Vite inline scripts need it disabled
 
 declare module "http" {
