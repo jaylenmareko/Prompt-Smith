@@ -4,3 +4,15 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+.vercel
+
+# Secrets / credentials (never commit)
+.env
+.env.*
+*.pem
+*.key
+*.crt
+credentials*.md
+credentials*.json
+secrets*.md
+secrets*.json
